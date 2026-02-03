@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  # PostgreSQL with TimescaleDB extension
+  postgres:
+    image: timescale/timescaledb:latest-pg16
+    container_name: mari8x-postgres
+    environment:
+      POSTGRES_USER: mari8x
+      POSTGRES_PASSWORD: changeme_in_production
+      POSTGRES_DB: mari8x_community
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mari8x"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - mari8x-network
+
+  # Mari8X Backend (GraphQL API)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: mari8x-backend
+    environment:
+      DATABASE_URL: postgresql://mari8x:changeme_in_production@postgres:5432/mari8x_community
+      AISSTREAM_API_KEY: ${AISSTREAM_API_KEY}
+      NODE_ENV: production
+      PORT: 4001
+    ports:
+      - "4001:4001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - mari8x-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Mari8X Frontend (Web UI)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: mari8x-frontend
+    environment:
+      VITE_GRAPHQL_ENDPOINT: http://localhost:4001/graphql
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - mari8x-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  mari8x-network:
+    driver: bridge

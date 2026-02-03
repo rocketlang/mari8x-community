@@ -1,0 +1,101 @@
+// Mari8X Community Edition - Prisma Schema
+// Includes only community features (basic tracking, routing)
+
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["fullTextSearch"]
+}
+
+generator pothos {
+  provider = "prisma-pothos-types"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ========== CORE MODELS ==========
+
+model User {
+  id             String   @id @default(cuid())
+  email          String   @unique
+  name           String
+  organizationId String
+  role           String   @default("user")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@map("users")
+}
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users   User[]
+  vessels Vessel[]
+
+  @@map("organizations")
+}
+
+model Vessel {
+  id             String   @id @default(cuid())
+  imo            String   @unique
+  name           String
+  type           String
+  flag           String
+  mmsi           String?  @unique
+  dwt            Float?
+  grt            Float?
+  yearBuilt      Int?
+  organizationId String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization      @relation(fields: [organizationId], references: [id])
+  positions    VesselPosition[]
+
+  @@index([imo])
+  @@index([mmsi])
+  @@map("vessels")
+}
+
+model VesselPosition {
+  id               String   @id @default(cuid())
+  vesselId         String
+  latitude         Float
+  longitude        Float
+  speed            Float?
+  heading          Float?
+  course           Float?
+  navigationStatus Int?
+  timestamp        DateTime @default(now())
+  source           String   @default("ais_terrestrial")
+
+  vessel Vessel @relation(fields: [vesselId], references: [id])
+
+  @@index([vesselId])
+  @@index([timestamp])
+  @@index([vesselId, timestamp])
+  @@map("vessel_positions")
+}
+
+model Port {
+  id       String  @id @default(cuid())
+  unlocode String  @unique
+  name     String
+  country  String
+  lat      Float?
+  lng      Float?
+
+  @@index([unlocode])
+  @@map("ports")
+}
+
+// DateTime scalar (built-in to Prisma)
+// JSON scalar (built-in to Prisma)
