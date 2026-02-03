@@ -47,6 +47,12 @@ AISSTREAM_API_KEY=your_actual_key_here
 docker-compose up -d
 
 # Wait 30 seconds for database initialization
+
+# Run database migrations
+docker-compose exec backend npm run db:migrate
+
+# Load sample data (optional - includes 8 sample vessels and 30+ major ports)
+docker-compose exec backend npm run db:seed
 ```
 
 ### 4. Verify
@@ -117,18 +123,15 @@ query {
 }
 ```
 
-**ML-powered route (uses 11.6M positions):**
+**List ports:**
 ```graphql
 query {
-  mlRouteRecommendation(
-    fromUnlocode: "INMUN"
-    toUnlocode: "SGSIN"
-    vesselType: "container"
-  ) {
-    totalDistanceNm
-    estimatedDays
-    confidence
-    basedOnVesselCount
+  ports(take: 5) {
+    unlocode
+    name
+    country
+    lat
+    lng
   }
 }
 ```
