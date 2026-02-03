@@ -37,8 +37,8 @@ export default function App() {
           Powered by <a href="https://aisstream.io">AISstream.io</a> (free tier)
         </p>
         <p>
-          <a href="/graphql">GraphQL Playground</a> | 
-          <a href="https://github.com/your-org/mari8x-community">GitHub</a>
+          <a href="/graphql">GraphQL Playground</a> |
+          <a href="https://github.com/rocketlang/mari8x-community">GitHub</a>
         </p>
       </footer>
     </div>

@@ -17,7 +17,7 @@ Get Mari8X Community Edition running in **5 minutes**! ⚡
 
 ```bash
 # Clone repository
-git clone https://github.com/your-org/mari8x-community.git
+git clone https://github.com/rocketlang/mari8x-community.git
 cd mari8x-community
 ```
 
@@ -290,7 +290,7 @@ docker-compose exec -T postgres psql -U mari8x mari8x_community < backup.sql
 
 - **Documentation:** [docs.mari8x.com](https://docs.mari8x.com)
 - **Discord:** [discord.gg/mari8x](https://discord.gg/mari8x)
-- **GitHub Issues:** [Report a bug](https://github.com/your-org/mari8x-community/issues)
+- **GitHub Issues:** [Report a bug](https://github.com/rocketlang/mari8x-community/issues)
 - **Email:** captain@mari8X.com
 
 ---

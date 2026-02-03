@@ -87,7 +87,7 @@
 5. **Initialize:** None (we have everything)
 6. Click "Create repository"
 
-**Copy the repository URL** (e.g., `https://github.com/YOUR_ORG/mari8x-community.git`)
+**Copy the repository URL** (e.g., `https://github.com/rocketlang/mari8x-community.git`)
 
 ### Step 2: Push to GitHub (2 minutes)
 
@@ -95,7 +95,7 @@
 cd /root/mari8x-community
 
 # Add GitHub remote
-git remote add origin https://github.com/YOUR_ORG/mari8x-community.git
+git remote add origin https://github.com/rocketlang/mari8x-community.git
 
 # Push main branch
 git branch -M main
@@ -178,7 +178,7 @@ Open source maritime vessel tracking platform powered by real-time AIS data.
 ### 🚀 Quick Start
 
 ```bash
-git clone https://github.com/YOUR_ORG/mari8x-community.git
+git clone https://github.com/rocketlang/mari8x-community.git
 cd mari8x-community
 cp .env.example .env
 # Add your AISstream.io API key to .env
@@ -206,7 +206,7 @@ AGPLv3 - See [LICENSE](./LICENSE) for details.
 
 **New to Mari8X?** Start with our [5-minute Quick Start guide](./QUICK_START.md)!
 
-**Questions?** Join our [Discussions](https://github.com/YOUR_ORG/mari8x-community/discussions)!
+**Questions?** Join our [Discussions](https://github.com/rocketlang/mari8x-community/discussions)!
 ```
 
 5. Check "Create a discussion for this release"
@@ -222,7 +222,7 @@ AGPLv3 - See [LICENSE](./LICENSE) for details.
 
 1. Go to https://news.ycombinator.com/submit
 2. **Title:** "Show HN: Mari8X Community – Open-source maritime vessel tracking"
-3. **URL:** `https://github.com/YOUR_ORG/mari8x-community`
+3. **URL:** `https://github.com/rocketlang/mari8x-community`
 4. Submit
 
 **Comment (first comment):**
@@ -427,7 +427,7 @@ GitHub: [link]
 **Next Command:**
 ```bash
 cd /root/mari8x-community
-git remote add origin https://github.com/YOUR_ORG/mari8x-community.git
+git remote add origin https://github.com/rocketlang/mari8x-community.git
 git branch -M main
 git push -u origin main
 git tag -a v1.0.0 -m "v1.0.0 - Initial Release"

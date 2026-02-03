@@ -27,7 +27,7 @@ Built with a modern tech stack and designed to be self-hosted, Mari8X gives you 
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/your-org/mari8x-community.git
+git clone https://github.com/rocketlang/mari8x-community.git
 cd mari8x-community
 
 # 2. Get free AIS API key
@@ -133,7 +133,7 @@ For advanced features like ML-powered ETA prediction, automated operations, AI e
 
 ```bash
 # Clone repo
-git clone https://github.com/your-org/mari8x-community.git
+git clone https://github.com/rocketlang/mari8x-community.git
 cd mari8x-community
 
 # Configure
@@ -220,8 +220,8 @@ See [API.md](./API.md) for complete API documentation.
 We welcome contributions! See [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
 
 **Ways to contribute:**
-- 🐛 Report bugs via [GitHub Issues](https://github.com/your-org/mari8x-community/issues)
-- 💡 Suggest features via [Discussions](https://github.com/your-org/mari8x-community/discussions)
+- 🐛 Report bugs via [GitHub Issues](https://github.com/rocketlang/mari8x-community/issues)
+- 💡 Suggest features via [Discussions](https://github.com/rocketlang/mari8x-community/discussions)
 - 📝 Improve documentation
 - 🔧 Submit pull requests
 - 🌍 Add port data (tariffs, restrictions)
@@ -374,9 +374,9 @@ A: AIS data quality depends on vessel transmissions and receiver coverage. Terre
 
 ## 📞 Support
 
-- **Community:** [Discord](https://discord.gg/mari8x) | [GitHub Discussions](https://github.com/your-org/mari8x-community/discussions)
+- **Community:** [Discord](https://discord.gg/mari8x) | [GitHub Discussions](https://github.com/rocketlang/mari8x-community/discussions)
 - **Documentation:** [docs.mari8x.com](https://docs.mari8x.com)
-- **Issues:** [GitHub Issues](https://github.com/your-org/mari8x-community/issues)
+- **Issues:** [GitHub Issues](https://github.com/rocketlang/mari8x-community/issues)
 - **Contact:** captain@mari8X.com
 
 ---

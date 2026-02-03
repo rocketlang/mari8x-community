@@ -179,7 +179,7 @@ frontend/
 
 ```bash
 # Clone
-git clone https://github.com/YOUR_ORG/mari8x-community.git
+git clone https://github.com/rocketlang/mari8x-community.git
 cd mari8x-community
 
 # Configure
@@ -260,7 +260,7 @@ cd /root/mari8x-community
 #    Visibility: Public
 
 # 2. Push to GitHub
-git remote add origin https://github.com/YOUR_ORG/mari8x-community.git
+git remote add origin https://github.com/rocketlang/mari8x-community.git
 git branch -M main
 git push -u origin main
 

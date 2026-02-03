@@ -124,7 +124,7 @@ cd /root/mari8x-community
 # Create GitHub repo (via web interface)
 # Then:
 
-git remote add origin https://github.com/YOUR_ORG/mari8x-community.git
+git remote add origin https://github.com/rocketlang/mari8x-community.git
 git branch -M main
 git push -u origin main
 
@@ -151,7 +151,7 @@ Uses AISstream.io's free tier (you need your own API key).
 
 AGPLv3 licensed. Contributions welcome!
 
-GitHub: https://github.com/YOUR_ORG/mari8x-community
+GitHub: https://github.com/rocketlang/mari8x-community
 Demo: (coming soon)
 
 Built with Node.js, Prisma, TimescaleDB, React, MapLibre GL.

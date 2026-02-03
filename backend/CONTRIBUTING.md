@@ -78,7 +78,7 @@ If applicable, add screenshots.
 
 ### 5. **Feature Requests**
 
-Open a [GitHub Discussion](https://github.com/your-org/mari8x-community/discussions) with:
+Open a [GitHub Discussion](https://github.com/rocketlang/mari8x-community/discussions) with:
 - **Use case:** What problem does this solve?
 - **Proposed solution:** How should it work?
 - **Alternatives considered:** Other approaches you thought about
@@ -152,7 +152,7 @@ Contributors are recognized in:
 ## 📞 Questions?
 
 - **Discord:** https://discord.gg/mari8x
-- **Discussions:** https://github.com/your-org/mari8x-community/discussions
+- **Discussions:** https://github.com/rocketlang/mari8x-community/discussions
 - **Email:** community@mari8x.com
 
 ---
