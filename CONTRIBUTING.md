@@ -134,7 +134,7 @@ npm run test:coverage
 
 **Reporting vulnerabilities:**
 - **DO NOT** open a public issue
-- Email: security@mari8x.com
+- Email: captain@mari8X.com
 - We'll respond within 48 hours
 
 ## 📜 License
@@ -153,7 +153,7 @@ Contributors are recognized in:
 
 - **Discord:** https://discord.gg/mari8x
 - **Discussions:** https://github.com/your-org/mari8x-community/discussions
-- **Email:** community@mari8x.com
+- **Email:** captain@mari8X.com
 
 ---
 

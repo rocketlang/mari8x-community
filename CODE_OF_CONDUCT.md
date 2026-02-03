@@ -33,7 +33,7 @@ diverse, inclusive, and healthy community.
 ## Enforcement
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
-reported to the community leaders at conduct@mari8x.com.
+reported to the community leaders at captain@mari8X.com.
 
 All complaints will be reviewed and investigated promptly and fairly.
 

@@ -291,7 +291,7 @@ docker-compose exec -T postgres psql -U mari8x mari8x_community < backup.sql
 - **Documentation:** [docs.mari8x.com](https://docs.mari8x.com)
 - **Discord:** [discord.gg/mari8x](https://discord.gg/mari8x)
 - **GitHub Issues:** [Report a bug](https://github.com/your-org/mari8x-community/issues)
-- **Email:** community@mari8x.com
+- **Email:** captain@mari8X.com
 
 ---
 

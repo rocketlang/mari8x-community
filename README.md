@@ -377,7 +377,7 @@ A: AIS data quality depends on vessel transmissions and receiver coverage. Terre
 - **Community:** [Discord](https://discord.gg/mari8x) | [GitHub Discussions](https://github.com/your-org/mari8x-community/discussions)
 - **Documentation:** [docs.mari8x.com](https://docs.mari8x.com)
 - **Issues:** [GitHub Issues](https://github.com/your-org/mari8x-community/issues)
-- **Enterprise:** support@mari8x.com
+- **Contact:** captain@mari8X.com
 
 ---
 
