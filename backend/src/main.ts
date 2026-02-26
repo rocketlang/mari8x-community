@@ -14,9 +14,16 @@ import { forecastDA } from './agent/da-forecast.js';
 import { getVesselProfile } from './agent/vessel-profile.js';
 import { getAlerts, acknowledgeAlert, evaluateAlerts, ensureDefaultRules } from './agent/alerts.js';
 import {
+  registerAgent, loginAgent, getAgentByKey, getAgentProfile,
+  updateAgentPorts, updateAgentTelegram, sendTelegramAlert, getAgentsForPort,
+  listAgents,
+} from './agent/onboarding.js';
+import { buildOnboardingHtml } from './agent/onboarding-html.js';
+import {
   createBL, issueBL, amendBL, surrenderBL, releaseBL,
   getBL, listBLs, getBLDashboard,
 } from './agent/bl.js';
+import { generateBLPdf } from './agent/bl-pdf.js';
 
 const app = express();
 const PORT = process.env.PORT || 4001;
@@ -434,6 +441,28 @@ app.patch('/api/bl/:blNumber/release', express.json(), (req, res) => {
   }
 });
 
+/**
+ * GET /api/bl/:blNumber/pdf
+ * Returns a PDF of the Bill of Lading (application/pdf).
+ * Attach ?download=1 to force-download instead of inline display.
+ */
+app.get('/api/bl/:blNumber/pdf', async (req, res) => {
+  try {
+    const bl = getBL(req.params.blNumber);
+    if (!bl) return res.status(404).json({ error: `B/L "${req.params.blNumber}" not found` });
+    const pdfBuffer = await generateBLPdf(bl);
+    const disposition = (req.query as any).download === '1'
+      ? `attachment; filename="${bl.blNumber}.pdf"`
+      : `inline; filename="${bl.blNumber}.pdf"`;
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', disposition);
+    res.setHeader('Content-Length', String(pdfBuffer.length));
+    res.send(pdfBuffer);
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
 // ── Arrival Alert REST API ────────────────────────────────────────────────────
 
 /**
@@ -454,11 +483,24 @@ app.get('/api/agent/alerts/:portCode', (req, res) => {
 /**
  * POST /api/agent/alerts/:portCode/evaluate
  * Trigger alert evaluation and return newly fired alerts.
+ * Also fans out Telegram notifications to subscribed agents.
  */
 app.post('/api/agent/alerts/:portCode/evaluate', async (req, res) => {
   try {
-    const fired = await evaluateAlerts(req.params.portCode);
-    res.json({ portCode: req.params.portCode.toUpperCase(), newAlerts: fired.length, alerts: fired });
+    const portCode = req.params.portCode;
+    const fired = await evaluateAlerts(portCode);
+    // Fan out to subscribed agents via Telegram
+    if (fired.length > 0) {
+      const subscribers = getAgentsForPort(portCode);
+      for (const agent of subscribers) {
+        for (const alert of fired) {
+          await sendTelegramAlert(agent,
+            `🚢 *Mari8X Alert — ${portCode.toUpperCase()}*\n*${alert.type}*: ${alert.message}\nSeverity: ${alert.severity ?? 'info'}`
+          );
+        }
+      }
+    }
+    res.json({ portCode: portCode.toUpperCase(), newAlerts: fired.length, alerts: fired });
   } catch (e) {
     res.status(500).json({ error: (e as Error).message });
   }
@@ -473,6 +515,104 @@ app.post('/api/agent/alerts/:portCode/:alertId/ack', (req, res) => {
     const ok = acknowledgeAlert(req.params.portCode, req.params.alertId);
     if (!ok) return res.status(404).json({ error: 'Alert not found' });
     res.json({ ok: true, alertId: req.params.alertId });
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+// ── Agent Onboarding & Auth ───────────────────────────────────────────────────
+
+/** GET /onboard — self-contained onboarding wizard */
+app.get('/onboard', (_req, res) => {
+  res.type('text/html').send(buildOnboardingHtml());
+});
+
+/** POST /api/auth/register */
+app.post('/api/auth/register', express.json(), (req, res) => {
+  try {
+    const { email, name, company, password } = req.body as any;
+    if (!email || !name || !company || !password) {
+      return res.status(400).json({ error: 'email, name, company, password are required' });
+    }
+    const result = registerAgent({ email, name, company, password });
+    if (!result.ok) return res.status(409).json({ error: result.error });
+    res.status(201).json(result.agent);
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+/** POST /api/auth/login */
+app.post('/api/auth/login', express.json(), (req, res) => {
+  try {
+    const { email, password } = req.body as any;
+    if (!email || !password) {
+      return res.status(400).json({ error: 'email and password are required' });
+    }
+    const result = loginAgent(email, password);
+    if (!result.ok) return res.status(401).json({ error: result.error });
+    res.json({ apiKey: result.apiKey, agent: result.agent });
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+/** GET /api/agents/me — profile for authenticated agent */
+app.get('/api/agents/me', (req, res) => {
+  try {
+    const apiKey = req.headers['x-mari8x-agent-key'] as string;
+    if (!apiKey) return res.status(401).json({ error: 'X-Mari8x-Agent-Key header required' });
+    const agent = getAgentProfile(apiKey);
+    if (!agent) return res.status(401).json({ error: 'Invalid API key' });
+    res.json(agent);
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+/** PUT /api/agents/me/ports — update subscribed UNLOCODE list */
+app.put('/api/agents/me/ports', express.json(), (req, res) => {
+  try {
+    const apiKey = req.headers['x-mari8x-agent-key'] as string;
+    if (!apiKey) return res.status(401).json({ error: 'X-Mari8x-Agent-Key header required' });
+    const { ports } = req.body as any;
+    if (!Array.isArray(ports)) return res.status(400).json({ error: 'ports must be an array' });
+    const result = updateAgentPorts(apiKey, ports);
+    if (!result.ok) return res.status(401).json({ error: result.error });
+    res.json({ ok: true, ports: result.ports });
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+/** PUT /api/agents/me/telegram — update Telegram config */
+app.put('/api/agents/me/telegram', express.json(), (req, res) => {
+  try {
+    const apiKey = req.headers['x-mari8x-agent-key'] as string;
+    if (!apiKey) return res.status(401).json({ error: 'X-Mari8x-Agent-Key header required' });
+    const { botToken, chatId, enabled } = req.body as any;
+    const result = updateAgentTelegram(apiKey, { botToken, chatId, enabled });
+    if (!result.ok) return res.status(401).json({ error: result.error });
+    res.json({ ok: true, telegram: result.telegram });
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+/** POST /api/agents/me/telegram/test — send a test message */
+app.post('/api/agents/me/telegram/test', async (req, res) => {
+  try {
+    const apiKey = req.headers['x-mari8x-agent-key'] as string;
+    if (!apiKey) return res.status(401).json({ error: 'X-Mari8x-Agent-Key header required' });
+    const agent = getAgentByKey(apiKey);
+    if (!agent) return res.status(401).json({ error: 'Invalid API key' });
+    const sent = await sendTelegramAlert(agent,
+      `✅ *Mari8X Test Alert*\nYour Telegram notifications are configured correctly.\nAgent: ${agent.name} (${agent.company})`
+    );
+    if (!sent) {
+      return res.status(400).json({ ok: false, error: 'Failed to send — check botToken, chatId, and that enabled=true' });
+    }
+    res.json({ ok: true, message: 'Test alert sent successfully' });
   } catch (e) {
     res.status(500).json({ error: (e as Error).message });
   }
@@ -493,7 +633,28 @@ app.use('/graphql', yoga);
 ensureDefaultRules();
 setInterval(async () => {
   try {
-    await getTopCongestedPorts(20); // warms cache + fires any high/critical alerts
+    await getTopCongestedPorts(20); // warms cache
+
+    // Evaluate alerts for every port that has at least one subscribed agent
+    const allAgents = listAgents();
+    const watchedPorts = new Set<string>();
+    for (const a of allAgents) {
+      for (const p of a.ports) watchedPorts.add(p);
+    }
+    for (const portCode of watchedPorts) {
+      try {
+        const fired = await evaluateAlerts(portCode);
+        if (fired.length === 0) continue;
+        const subscribers = getAgentsForPort(portCode);
+        for (const agent of subscribers) {
+          for (const alert of fired) {
+            await sendTelegramAlert(agent,
+              `🚢 *Mari8X Alert — ${portCode}*\n*${alert.type}*: ${alert.message}\nSeverity: ${alert.severity ?? 'info'}`
+            );
+          }
+        }
+      } catch { /* skip individual port failures */ }
+    }
   } catch { /* non-fatal */ }
 }, 15 * 60_000);
 
@@ -503,6 +664,8 @@ app.listen(PORT, () => {
   console.log(`📡 GraphQL API: http://localhost:${PORT}/graphql`);
   console.log(`🌊 Congestion:  http://localhost:${PORT}/api/congestion`);
   console.log(`📄 B/L Module:  http://localhost:${PORT}/api/bl`);
+  console.log(`📑 B/L PDF:     http://localhost:${PORT}/api/bl/:blNumber/pdf`);
+  console.log(`🧑‍✈️ Onboarding:  http://localhost:${PORT}/onboard`);
   console.log(`❤️  Health:      http://localhost:${PORT}/health`);
   // Warm congestion cache on startup
   setTimeout(() => getTopCongestedPorts(20).catch(() => {}), 3000);
