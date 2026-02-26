@@ -22,6 +22,7 @@ import {
   getBL, listBLs, getBLDashboard,
   type BillOfLading, type BLSummary,
 } from '../../agent/bl.js';
+import { generateBLPdf } from '../../agent/bl-pdf.js';
 
 // ── Object types ──────────────────────────────────────────────────────────────
 
@@ -280,5 +281,28 @@ builder.mutationField('releaseBL', t =>
       telexRefNo:          args.telexRefNo  ?? undefined,
       releaseType:         args.releaseType as any ?? undefined,
     }),
+  })
+);
+
+// ── PDF Export ────────────────────────────────────────────────────────────────
+
+/**
+ * exportBillOfLadingPdf(blNumber) → base64-encoded PDF string
+ * Renders the B/L as a professionally formatted A4 PDF via PDFKit.
+ * The caller can decode from base64 to get the raw PDF buffer.
+ *
+ * REST equivalent: GET /api/bl/:blNumber/pdf
+ */
+builder.mutationField('exportBillOfLadingPdf', t =>
+  t.field({
+    type:     'String',
+    nullable: true,
+    args:     { blNumber: t.arg.string({ required: true }) },
+    resolve:  async (_, args) => {
+      const bl = getBL(args.blNumber);
+      if (!bl) return null;
+      const buf = await generateBLPdf(bl);
+      return buf.toString('base64');
+    },
   })
 );
