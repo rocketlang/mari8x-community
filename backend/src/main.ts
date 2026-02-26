@@ -147,6 +147,68 @@ app.post('/api/agent/da-forecast', express.json(), (req, res) => {
   }
 });
 
+// ── Port Dashboard ────────────────────────────────────────────────────────────
+
+/**
+ * GET /api/agent/dashboard/:portCode
+ *   ?window=48          — pre-arrival ETA window (hours, default 48)
+ *   &grt=50000          — vessel GRT for DA forecast (default 50000)
+ *   &loa=250            — vessel LOA metres for DA forecast (default 250)
+ *   &teu=4000           — vessel TEU capacity for DA forecast (default 4000)
+ *
+ * Aggregates:
+ *   - Port congestion snapshot
+ *   - Pre-arrival vessel list
+ *   - Open document checklists for this port
+ *   - DA forecast for a representative vessel call
+ */
+app.get('/api/agent/dashboard/:portCode', async (req, res) => {
+  try {
+    const { portCode } = req.params as any;
+    const q = req.query as any;
+    const window = parseInt(q.window ?? '48', 10);
+
+    // Run congestion + pre-arrival in parallel
+    const [congestion, preArrival] = await Promise.all([
+      getPortCongestion(portCode),
+      getPreArrivalVessels(portCode, window),
+    ]);
+
+    if (!congestion && !preArrival) {
+      return res.status(404).json({ error: `Port "${portCode}" not found or has no coordinates` });
+    }
+
+    // Document checklists open for this port
+    const allOpen     = listOpenChecklists();
+    const portUpper   = portCode.toUpperCase();
+    const portDocs    = allOpen.filter(c => c.portUnlocode === portUpper);
+
+    // DA forecast for a representative vessel (defaults or query params)
+    const vesselSpec = {
+      grt:         parseInt(q.grt ?? '50000', 10),
+      loaMetres:   parseInt(q.loa ?? '250', 10),
+      teuCapacity: parseInt(q.teu ?? '4000', 10),
+    };
+    const daForecast = forecastDA(portCode, vesselSpec);
+
+    res.json({
+      port:         congestion?.port ?? preArrival?.port ?? { unlocode: portUpper },
+      generatedAt:  new Date().toISOString(),
+      congestion,
+      preArrival,
+      documents: {
+        openVoyages:   portDocs.length,
+        totalPending:  portDocs.reduce((s, c) => s + c.summary.pending, 0),
+        totalOverdue:  portDocs.reduce((s, c) => s + c.summary.overdue, 0),
+        checklists:    portDocs,
+      },
+      daForecast,
+    });
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
 // ── GraphQL endpoint ──────────────────────────────────────────────────────────
 
 // GraphQL endpoint
