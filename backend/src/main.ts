@@ -12,6 +12,7 @@ import { getPreArrivalVessels } from './agent/pre-arrival.js';
 import { getChecklist, updateDocStatus, listOpenChecklists } from './agent/documents.js';
 import { forecastDA } from './agent/da-forecast.js';
 import { getVesselProfile } from './agent/vessel-profile.js';
+import { getAlerts, acknowledgeAlert, evaluateAlerts, ensureDefaultRules } from './agent/alerts.js';
 
 const app = express();
 const PORT = process.env.PORT || 4001;
@@ -165,6 +166,84 @@ app.get('/api/agent/vessel/:imo', async (req, res) => {
   }
 });
 
+// ── Voyage Schedule ───────────────────────────────────────────────────────────
+
+/**
+ * GET /api/agent/schedule/:portCode
+ *   ?window=72   — ETA window hours (default 72)
+ *
+ * Returns ETA-ordered arrival timeline for a port, combining:
+ *   pre-arrival vessel list (ETA, confidence, speed, distance)
+ *   doc checklist readiness for any voyage linked to that IMO + port
+ *   congestion forecast at expected arrival time
+ *   indicative DA cost
+ *
+ * Each row in `arrivals` is a ready-to-render schedule card.
+ */
+app.get('/api/agent/schedule/:portCode', async (req, res) => {
+  try {
+    const { portCode } = req.params as any;
+    const window = parseInt((req.query as any).window ?? '72', 10);
+
+    const [preArrival, congestion] = await Promise.all([
+      getPreArrivalVessels(portCode, window),
+      getPortCongestion(portCode),
+    ]);
+
+    if (!preArrival) {
+      return res.status(404).json({ error: `Port "${portCode}" not found` });
+    }
+
+    const allOpen   = listOpenChecklists();
+    const portUpper = portCode.toUpperCase();
+    const daBase    = forecastDA(portCode, { grt: 50000, loaMetres: 250, teuCapacity: 4000 });
+
+    // Build a schedule card per pre-arrival vessel
+    const arrivals = preArrival.vessels.map(v => {
+      const etaIso = v.etaAt;
+      // Find any open checklist for this vessel + port
+      const checklist = allOpen.find(c => c.imo === v.imo && c.portUnlocode === portUpper) ?? null;
+
+      return {
+        imo:         v.imo,
+        vesselName:  v.name,
+        etaHours:    v.etaHours,
+        etaAt:       etaIso,
+        distanceNm:  v.distanceNm,
+        speedKt:     v.speedKt,
+        confidence:  v.confidence,
+        docs: checklist ? {
+          voyageId:  checklist.voyageId,
+          readyPct:  checklist.summary.readyPct,
+          overdue:   checklist.summary.overdue,
+          pending:   checklist.summary.pending,
+        } : null,
+        congestionAtArrival: congestion ? {
+          level:              congestion.level,
+          score:              congestion.congestionScore,
+          estimatedWaitHours: congestion.estimatedWaitHours,
+        } : null,
+        daEstimateUsd: daBase.costs.totalUsd,
+      };
+    });
+
+    res.json({
+      port:       preArrival.port,
+      windowHours: window,
+      generatedAt: new Date().toISOString(),
+      currentCongestion: congestion ? {
+        level:  congestion.level,
+        score:  congestion.congestionScore,
+        vessels: congestion.anchorageVessels + congestion.approachVessels,
+      } : null,
+      arrivalCount: arrivals.length,
+      arrivals,
+    });
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
 // ── Port Dashboard ────────────────────────────────────────────────────────────
 
 /**
@@ -227,6 +306,50 @@ app.get('/api/agent/dashboard/:portCode', async (req, res) => {
   }
 });
 
+// ── Arrival Alert REST API ────────────────────────────────────────────────────
+
+/**
+ * GET /api/agent/alerts/:portCode
+ *   ?ack=true   — include acknowledged alerts (default false)
+ * Returns active alert queue for the port.
+ */
+app.get('/api/agent/alerts/:portCode', (req, res) => {
+  try {
+    const includeAck = (req.query as any).ack === 'true';
+    const alerts = getAlerts(req.params.portCode, includeAck);
+    res.json({ portCode: req.params.portCode.toUpperCase(), count: alerts.length, alerts });
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+/**
+ * POST /api/agent/alerts/:portCode/evaluate
+ * Trigger alert evaluation and return newly fired alerts.
+ */
+app.post('/api/agent/alerts/:portCode/evaluate', async (req, res) => {
+  try {
+    const fired = await evaluateAlerts(req.params.portCode);
+    res.json({ portCode: req.params.portCode.toUpperCase(), newAlerts: fired.length, alerts: fired });
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+/**
+ * POST /api/agent/alerts/:portCode/:alertId/ack
+ * Acknowledge a specific alert.
+ */
+app.post('/api/agent/alerts/:portCode/:alertId/ack', (req, res) => {
+  try {
+    const ok = acknowledgeAlert(req.params.portCode, req.params.alertId);
+    if (!ok) return res.status(404).json({ error: 'Alert not found' });
+    res.json({ ok: true, alertId: req.params.alertId });
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
 // ── GraphQL endpoint ──────────────────────────────────────────────────────────
 
 // GraphQL endpoint
@@ -239,6 +362,7 @@ const yoga = createYoga({
 app.use('/graphql', yoga);
 
 // ── Periodic congestion alert sweep (every 15 min) ──────────────────────────
+ensureDefaultRules();
 setInterval(async () => {
   try {
     await getTopCongestedPorts(20); // warms cache + fires any high/critical alerts
