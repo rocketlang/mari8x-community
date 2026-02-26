@@ -13,6 +13,10 @@ import { getChecklist, updateDocStatus, listOpenChecklists } from './agent/docum
 import { forecastDA } from './agent/da-forecast.js';
 import { getVesselProfile } from './agent/vessel-profile.js';
 import { getAlerts, acknowledgeAlert, evaluateAlerts, ensureDefaultRules } from './agent/alerts.js';
+import {
+  createBL, issueBL, amendBL, surrenderBL, releaseBL,
+  getBL, listBLs, getBLDashboard,
+} from './agent/bl.js';
 
 const app = express();
 const PORT = process.env.PORT || 4001;
@@ -306,6 +310,130 @@ app.get('/api/agent/dashboard/:portCode', async (req, res) => {
   }
 });
 
+// ── Bill of Lading REST API ───────────────────────────────────────────────────
+
+/**
+ * GET /api/bl?status=&portOfDischarge=&voyageId=&limit=
+ * List B/Ls with optional filters.
+ */
+app.get('/api/bl', (req, res) => {
+  try {
+    const q = req.query as any;
+    const bls = listBLs({
+      status:          q.status          ?? undefined,
+      portOfDischarge: q.portOfDischarge ?? undefined,
+      voyageId:        q.voyageId        ?? undefined,
+      limit:           q.limit ? parseInt(q.limit, 10) : 50,
+    });
+    res.json({ count: bls.length, bls });
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+/**
+ * GET /api/bl/dashboard — status counts
+ */
+app.get('/api/bl/dashboard', (_req, res) => {
+  try {
+    res.json(getBLDashboard());
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+/**
+ * GET /api/bl/:blNumber — single B/L full record
+ */
+app.get('/api/bl/:blNumber', (req, res) => {
+  try {
+    const bl = getBL(req.params.blNumber);
+    if (!bl) return res.status(404).json({ error: `B/L "${req.params.blNumber}" not found` });
+    res.json(bl);
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+/**
+ * POST /api/bl — create a draft B/L
+ * Body: CreateBLInput fields
+ */
+app.post('/api/bl', express.json(), (req, res) => {
+  try {
+    const bl = createBL(req.body);
+    res.status(201).json(bl);
+  } catch (e) {
+    res.status(400).json({ error: (e as Error).message });
+  }
+});
+
+/**
+ * PATCH /api/bl/:blNumber/issue
+ * Body: { issuedBy: string, placeOfIssue?: string }
+ */
+app.patch('/api/bl/:blNumber/issue', express.json(), (req, res) => {
+  try {
+    const { issuedBy, placeOfIssue } = req.body as any;
+    if (!issuedBy) return res.status(400).json({ error: 'issuedBy is required' });
+    const bl = issueBL(req.params.blNumber, issuedBy, placeOfIssue);
+    if (!bl) return res.status(404).json({ error: `B/L "${req.params.blNumber}" not found` });
+    res.json(bl);
+  } catch (e) {
+    res.status(400).json({ error: (e as Error).message });
+  }
+});
+
+/**
+ * PATCH /api/bl/:blNumber/amend
+ * Body: { field, newValue, reason, amendedBy }
+ */
+app.patch('/api/bl/:blNumber/amend', express.json(), (req, res) => {
+  try {
+    const { field, newValue, reason, amendedBy } = req.body as any;
+    if (!field || !newValue || !reason || !amendedBy) {
+      return res.status(400).json({ error: 'field, newValue, reason, amendedBy are required' });
+    }
+    const bl = amendBL(req.params.blNumber, { field, newValue, reason, amendedBy });
+    if (!bl) return res.status(404).json({ error: `B/L "${req.params.blNumber}" not found` });
+    res.json(bl);
+  } catch (e) {
+    res.status(400).json({ error: (e as Error).message });
+  }
+});
+
+/**
+ * PATCH /api/bl/:blNumber/surrender
+ * Body: { surrenderedBy: string }
+ */
+app.patch('/api/bl/:blNumber/surrender', express.json(), (req, res) => {
+  try {
+    const { surrenderedBy } = req.body as any;
+    if (!surrenderedBy) return res.status(400).json({ error: 'surrenderedBy is required' });
+    const bl = surrenderBL(req.params.blNumber, surrenderedBy);
+    if (!bl) return res.status(404).json({ error: `B/L "${req.params.blNumber}" not found` });
+    res.json(bl);
+  } catch (e) {
+    res.status(400).json({ error: (e as Error).message });
+  }
+});
+
+/**
+ * PATCH /api/bl/:blNumber/release
+ * Body: { releaseAuthorisedBy, telexRefNo?, releaseType? }
+ */
+app.patch('/api/bl/:blNumber/release', express.json(), (req, res) => {
+  try {
+    const { releaseAuthorisedBy, telexRefNo, releaseType } = req.body as any;
+    if (!releaseAuthorisedBy) return res.status(400).json({ error: 'releaseAuthorisedBy is required' });
+    const bl = releaseBL(req.params.blNumber, { releaseAuthorisedBy, telexRefNo, releaseType });
+    if (!bl) return res.status(404).json({ error: `B/L "${req.params.blNumber}" not found` });
+    res.json(bl);
+  } catch (e) {
+    res.status(400).json({ error: (e as Error).message });
+  }
+});
+
 // ── Arrival Alert REST API ────────────────────────────────────────────────────
 
 /**
@@ -374,6 +502,7 @@ app.listen(PORT, () => {
   console.log(`🚢 Mari8X Community Edition`);
   console.log(`📡 GraphQL API: http://localhost:${PORT}/graphql`);
   console.log(`🌊 Congestion:  http://localhost:${PORT}/api/congestion`);
+  console.log(`📄 B/L Module:  http://localhost:${PORT}/api/bl`);
   console.log(`❤️  Health:      http://localhost:${PORT}/health`);
   // Warm congestion cache on startup
   setTimeout(() => getTopCongestedPorts(20).catch(() => {}), 3000);
