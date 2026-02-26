@@ -44,21 +44,30 @@ export interface DAEstimate {
   estimatedAt:      string;
 }
 
+export interface CartaEnrichment {
+  briefDate:       string;       // date of the brief used
+  portMentioned:   boolean;      // brief mentions this port code
+  vesselMentioned: boolean;      // brief mentions this vessel name
+  excerpt:         string | null; // relevant snippet (max 300 chars)
+  fetchedAt:       string;
+}
+
 export interface PortCallRecord {
-  portCallId:    string;         // voyageId_portCode
-  voyageId:      string;
-  vesselName:    string;
-  vesselIMO:     string | null;
-  portCode:      string;         // UNLOCODE
-  portName:      string | null;
-  eta:           string | null;
-  ata:           string | null;  // actual time of arrival (set on BERTHED)
-  atd:           string | null;  // actual time of departure (set on DEPARTED)
-  currentStage:  PortCallStage;
-  events:        PortCallEvent[];
-  da:            DAEstimate | null;
-  createdAt:     string;
-  updatedAt:     string;
+  portCallId:       string;         // voyageId_portCode
+  voyageId:         string;
+  vesselName:       string;
+  vesselIMO:        string | null;
+  portCode:         string;         // UNLOCODE
+  portName:         string | null;
+  eta:              string | null;
+  ata:              string | null;  // actual time of arrival (set on BERTHED)
+  atd:              string | null;  // actual time of departure (set on DEPARTED)
+  currentStage:     PortCallStage;
+  events:           PortCallEvent[];
+  da:               DAEstimate | null;
+  cartaEnrichment:  CartaEnrichment | null;
+  createdAt:        string;
+  updatedAt:        string;
 }
 
 export interface PortCallInput {
@@ -113,6 +122,55 @@ function broadcast(event: string, record: PortCallRecord) {
   if (_broadcastFn) _broadcastFn(event, record);
 }
 
+// ── CARTA Enrichment ──────────────────────────────────────────────────────────
+
+const CARTA_URL = process.env.CARTA_URL ?? 'http://localhost:4055';
+
+async function enrichFromCarta(portCallId: string, vesselName: string, portCode: string): Promise<void> {
+  try {
+    const res = await fetch(`${CARTA_URL}/api/brief/latest`, {
+      signal: AbortSignal.timeout(6_000),
+    });
+    if (!res.ok) return;
+    const data = await res.json() as { file?: string; content?: string; error?: string };
+    if (!data.content) return;
+
+    const content     = data.content;
+    const lc          = content.toLowerCase();
+    const portLower   = portCode.toLowerCase();
+    const vesselLower = vesselName.toLowerCase();
+
+    const portMentioned   = lc.includes(portLower);
+    const vesselMentioned = lc.includes(vesselLower);
+
+    // Extract a short relevant excerpt
+    let excerpt: string | null = null;
+    const needle = portMentioned ? portLower : vesselMentioned ? vesselLower : null;
+    if (needle) {
+      const idx = lc.indexOf(needle);
+      const start = Math.max(0, idx - 60);
+      const end   = Math.min(content.length, idx + 240);
+      excerpt = content.slice(start, end).replace(/\n+/g, ' ').trim();
+    }
+
+    const enrichment: CartaEnrichment = {
+      briefDate:       data.file?.replace('carta-brief-', '').replace('.md', '') ?? 'unknown',
+      portMentioned,
+      vesselMentioned,
+      excerpt,
+      fetchedAt:       new Date().toISOString(),
+    };
+
+    // Update the saved record with CARTA context
+    const store = loadAll();
+    if (store[portCallId]) {
+      store[portCallId].cartaEnrichment = enrichment;
+      store[portCallId].updatedAt       = new Date().toISOString();
+      saveAll(store);
+    }
+  } catch { /* non-fatal */ }
+}
+
 // ── Stage machine ─────────────────────────────────────────────────────────────
 
 const STAGE_ORDER: PortCallStage[] = [
@@ -157,7 +215,8 @@ export function openPortCall(input: PortCallInput): PortCallRecord {
       notes:     input.notes ?? null,
       updatedBy: input.updatedBy ?? 'system',
     }],
-    da:        null,
+    da:               null,
+    cartaEnrichment:  null,
     createdAt: now,
     updatedAt: now,
   };
@@ -165,6 +224,10 @@ export function openPortCall(input: PortCallInput): PortCallRecord {
   data[portCallId] = record;
   saveAll(data);
   broadcast('PORT_CALL_OPENED', record);
+
+  // Enrich with CARTA maritime intelligence in background
+  enrichFromCarta(portCallId, input.vesselName, input.portCode).catch(() => {});
+
   return record;
 }
 
