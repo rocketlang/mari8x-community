@@ -10,6 +10,7 @@ import './types/port.js';
 import './types/routing.js';
 import './types/agent.js';
 import './types/bl.js';
+import './types/eta.js';
 
 // Build and export schema
 export const schema = builder.toSchema();

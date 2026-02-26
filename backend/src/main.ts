@@ -5,6 +5,7 @@
 import express from 'express';
 import { createYoga } from 'graphql-yoga';
 import cors from 'cors';
+import { WebSocketServer } from 'ws';
 import { schema } from './schema/index.js';
 import { prisma } from './lib/prisma.js';
 import { getPortCongestion, getTopCongestedPorts, getAllPortsCongestion } from './congestion/engine.js';
@@ -24,6 +25,11 @@ import {
   getBL, listBLs, getBLDashboard,
 } from './agent/bl.js';
 import { generateBLPdf } from './agent/bl-pdf.js';
+import {
+  upsertETA, getETA, listETAsByPort, listAllETAs, getETADashboard, markArrived,
+  setEtaBroadcast,
+} from './agent/eta.js';
+import type { EtaRecord } from './agent/eta.js';
 
 const app = express();
 const PORT = process.env.PORT || 4001;
@@ -658,15 +664,91 @@ setInterval(async () => {
   } catch { /* non-fatal */ }
 }, 15 * 60_000);
 
+// ── ETA REST API ──────────────────────────────────────────────────────────────
+
+/**
+ * POST /api/eta
+ * Upsert an ETA record for a voyage.
+ * Body: { voyageId, vesselName, vesselIMO?, portCode, portName?, eta, source?, remarks? }
+ */
+app.post('/api/eta', express.json(), (req, res) => {
+  try {
+    const { voyageId, vesselName, vesselIMO, portCode, portName, eta, source, remarks } = req.body as any;
+    if (!voyageId || !vesselName || !portCode || !eta) {
+      return res.status(400).json({ error: 'voyageId, vesselName, portCode and eta are required' });
+    }
+    const record = upsertETA({ voyageId, vesselName, vesselIMO, portCode, portName, eta, source, remarks });
+    res.json(record);
+  } catch (e) { res.status(400).json({ error: (e as Error).message }); }
+});
+
+/**
+ * GET /api/eta/dashboard — summary counts by port
+ */
+app.get('/api/eta/dashboard', (_req, res) => {
+  res.json(getETADashboard());
+});
+
+/**
+ * GET /api/eta/all — all ETA records
+ */
+app.get('/api/eta/all', (_req, res) => {
+  res.json(listAllETAs());
+});
+
+/**
+ * GET /api/eta/port/:portCode — all vessels expected at a port
+ */
+app.get('/api/eta/port/:portCode', (req, res) => {
+  const records = listETAsByPort(req.params.portCode);
+  res.json({ portCode: req.params.portCode.toUpperCase(), count: records.length, records });
+});
+
+/**
+ * GET /api/eta/:voyageId — single ETA record with history
+ */
+app.get('/api/eta/:voyageId', (req, res) => {
+  const record = getETA(req.params.voyageId);
+  if (!record) return res.status(404).json({ error: `Voyage "${req.params.voyageId}" not found` });
+  res.json(record);
+});
+
+/**
+ * PATCH /api/eta/:voyageId/arrived — mark voyage as arrived
+ */
+app.patch('/api/eta/:voyageId/arrived', express.json(), (req, res) => {
+  const record = markArrived(req.params.voyageId, (req.body as any)?.remarks);
+  if (!record) return res.status(404).json({ error: `Voyage "${req.params.voyageId}" not found` });
+  res.json(record);
+});
+
 // Start server
-app.listen(PORT, () => {
+const httpServer = app.listen(PORT, () => {
   console.log(`🚢 Mari8X Community Edition`);
   console.log(`📡 GraphQL API: http://localhost:${PORT}/graphql`);
   console.log(`🌊 Congestion:  http://localhost:${PORT}/api/congestion`);
   console.log(`📄 B/L Module:  http://localhost:${PORT}/api/bl`);
   console.log(`📑 B/L PDF:     http://localhost:${PORT}/api/bl/:blNumber/pdf`);
   console.log(`🧑‍✈️ Onboarding:  http://localhost:${PORT}/onboard`);
+  console.log(`📍 ETA Tracker: http://localhost:${PORT}/api/eta`);
   console.log(`❤️  Health:      http://localhost:${PORT}/health`);
   // Warm congestion cache on startup
   setTimeout(() => getTopCongestedPorts(20).catch(() => {}), 3000);
+});
+
+// ── WebSocket: ETA push ───────────────────────────────────────────────────────
+// ws://host:PORT/ws/eta   — subscribe to ETA_NEW | ETA_UPDATE | ETA_ARRIVED events
+const wss = new WebSocketServer({ server: httpServer, path: '/ws/eta' });
+
+// Wire ETA broadcast callback
+setEtaBroadcast((event: string, record: EtaRecord) => {
+  const msg = JSON.stringify({ event, record });
+  for (const client of wss.clients) {
+    if (client.readyState === 1 /* OPEN */) client.send(msg);
+  }
+});
+
+wss.on('connection', (ws) => {
+  // Send current ETA snapshot on connect
+  ws.send(JSON.stringify({ event: 'ETA_SNAPSHOT', records: listAllETAs() }));
 });
