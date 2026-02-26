@@ -41,6 +41,10 @@ import {
   getPortCallDashboard, setPortCallBroadcast,
 } from './agent/port-call.js';
 import type { PortCallRecord } from './agent/port-call.js';
+import {
+  registerVessel, getVessel, searchVessels, listVessels,
+  updateVessel, bulkImportFromPortCalls, getRegistryStats,
+} from './agent/vessel-registry.js';
 
 const app = express();
 const PORT = process.env.PORT || 4001;
@@ -953,6 +957,51 @@ app.post('/api/portcall/:portCallId/da', express.json(), (req, res) => {
   }
 });
 
+// ── Vessel Registry ───────────────────────────────────────────────────────────
+
+/** POST /api/vessels — register or update a vessel */
+app.post('/api/vessels', express.json(), (req, res) => {
+  try {
+    const vessel = registerVessel(req.body);
+    res.status(201).json(vessel);
+  } catch (e) {
+    res.status(400).json({ error: (e as Error).message });
+  }
+});
+
+/** GET /api/vessels — list vessels; ?name= for search, ?type= or ?flag= for filter */
+app.get('/api/vessels', (req, res) => {
+  const { name, type, flag } = req.query as Record<string, string>;
+  if (name) return res.json(searchVessels(name));
+  res.json(listVessels({ type: type as any, flag }));
+});
+
+/** GET /api/vessels/stats — registry statistics */
+app.get('/api/vessels/stats', (_req, res) => {
+  res.json(getRegistryStats());
+});
+
+/** GET /api/vessels/import — bulk import from existing port call records */
+app.get('/api/vessels/import', (_req, res) => {
+  res.json(bulkImportFromPortCalls());
+});
+
+/** GET /api/vessels/:imo — get vessel particulars */
+app.get('/api/vessels/:imo', (req, res) => {
+  const vessel = getVessel(req.params.imo);
+  if (!vessel) return res.status(404).json({ error: `Vessel IMO ${req.params.imo} not found` });
+  res.json(vessel);
+});
+
+/** PATCH /api/vessels/:imo — update vessel fields */
+app.patch('/api/vessels/:imo', express.json(), (req, res) => {
+  try {
+    res.json(updateVessel(req.params.imo, req.body));
+  } catch (e) {
+    res.status(404).json({ error: (e as Error).message });
+  }
+});
+
 // Start server
 const httpServer = app.listen(PORT, () => {
   console.log(`🚢 Mari8X Community Edition`);
@@ -964,6 +1013,7 @@ const httpServer = app.listen(PORT, () => {
   console.log(`📍 ETA Tracker: http://localhost:${PORT}/api/eta`);
   console.log(`⏳ D&D Tracker: http://localhost:${PORT}/api/dd`);
   console.log(`🚢 Port Calls:  http://localhost:${PORT}/api/portcall`);
+  console.log(`🛳️  Vessel Reg:  http://localhost:${PORT}/api/vessels`);
   console.log(`❤️  Health:      http://localhost:${PORT}/health`);
   // Warm congestion cache on startup
   setTimeout(() => getTopCongestedPorts(20).catch(() => {}), 3000);

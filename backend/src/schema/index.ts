@@ -13,6 +13,8 @@ import './types/bl.js';
 import './types/eta.js';
 import './types/demurrage.js';
 import './types/port-call.js';
+import './types/vessel-registry.js';
+import './types/amosconnect.js';
 
 // Build and export schema
 export const schema = builder.toSchema();
