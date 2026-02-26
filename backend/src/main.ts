@@ -11,6 +11,7 @@ import { getPortCongestion, getTopCongestedPorts, getAllPortsCongestion } from '
 import { getPreArrivalVessels } from './agent/pre-arrival.js';
 import { getChecklist, updateDocStatus, listOpenChecklists } from './agent/documents.js';
 import { forecastDA } from './agent/da-forecast.js';
+import { getVesselProfile } from './agent/vessel-profile.js';
 
 const app = express();
 const PORT = process.env.PORT || 4001;
@@ -142,6 +143,23 @@ app.post('/api/agent/da-forecast', express.json(), (req, res) => {
       return res.status(400).json({ error: 'port, vessel.grt, and vessel.loaMetres are required' });
     }
     res.json(forecastDA(port, vessel));
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+// ── Vessel Profile ────────────────────────────────────────────────────────────
+
+/**
+ * GET /api/agent/vessel/:imo
+ * Full vessel intelligence: position, 24h track, nearest port + ETA,
+ * congestion at destination, DA forecast, open doc checklists.
+ */
+app.get('/api/agent/vessel/:imo', async (req, res) => {
+  try {
+    const profile = await getVesselProfile((req.params as any).imo);
+    if (!profile) return res.status(404).json({ error: `Vessel IMO "${(req.params as any).imo}" not found` });
+    res.json(profile);
   } catch (e) {
     res.status(500).json({ error: (e as Error).message });
   }
