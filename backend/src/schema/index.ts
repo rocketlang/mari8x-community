@@ -15,6 +15,8 @@ import './types/demurrage.js';
 import './types/port-call.js';
 import './types/vessel-registry.js';
 import './types/amosconnect.js';
+import './types/noon-report.js';
+import './types/crew-welfare.js';
 
 // Build and export schema
 export const schema = builder.toSchema();
