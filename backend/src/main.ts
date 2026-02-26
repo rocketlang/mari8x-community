@@ -30,6 +30,11 @@ import {
   setEtaBroadcast,
 } from './agent/eta.js';
 import type { EtaRecord } from './agent/eta.js';
+import {
+  upsertDD, getDD, clearDD, listAllDD, listDDByPort, getDDAlerts,
+  getDDDashboard, setDDBroadcast, refreshAllDD,
+} from './agent/demurrage.js';
+import type { DDRecord } from './agent/demurrage.js';
 
 const app = express();
 const PORT = process.env.PORT || 4001;
@@ -722,6 +727,93 @@ app.patch('/api/eta/:voyageId/arrived', express.json(), (req, res) => {
   res.json(record);
 });
 
+// ── Demurrage & Detention REST API ────────────────────────────────────────────
+
+/**
+ * POST /api/dd — create or update a D&D record for a B/L
+ * Body: upsertDD input (blNumber, portCode, containers[], rules?, alertThresholdUsd?)
+ */
+app.post('/api/dd', express.json(), (req, res) => {
+  try {
+    const record = upsertDD(req.body);
+    res.status(201).json(record);
+  } catch (e) {
+    res.status(400).json({ error: (e as Error).message });
+  }
+});
+
+/**
+ * GET /api/dd/dashboard — aggregated D&D dashboard
+ */
+app.get('/api/dd/dashboard', (_req, res) => {
+  try {
+    res.json(getDDDashboard());
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+/**
+ * GET /api/dd/alerts — all records with active D&D liability
+ */
+app.get('/api/dd/alerts', (_req, res) => {
+  try {
+    res.json(getDDAlerts());
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+/**
+ * GET /api/dd/port/:portCode — D&D records for a specific port
+ */
+app.get('/api/dd/port/:portCode', (req, res) => {
+  try {
+    res.json(listDDByPort(req.params.portCode));
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+/**
+ * GET /api/dd/:blNumber — single B/L D&D record
+ */
+app.get('/api/dd/:blNumber', (req, res) => {
+  try {
+    const record = getDD(req.params.blNumber);
+    if (!record) return res.status(404).json({ error: `B/L "${req.params.blNumber}" not found` });
+    res.json(record);
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+/**
+ * PATCH /api/dd/:blNumber/clear — mark all containers returned (clears D&D)
+ * Body: { returnDate?: string }
+ */
+app.patch('/api/dd/:blNumber/clear', express.json(), (req, res) => {
+  try {
+    const record = clearDD(req.params.blNumber, (req.body as any)?.returnDate);
+    if (!record) return res.status(404).json({ error: `B/L "${req.params.blNumber}" not found` });
+    res.json(record);
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+/**
+ * POST /api/dd/refresh — recompute liability for all open records
+ */
+app.post('/api/dd/refresh', (_req, res) => {
+  try {
+    const updated = refreshAllDD();
+    res.json({ updated: updated.length, records: updated });
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
 // Start server
 const httpServer = app.listen(PORT, () => {
   console.log(`🚢 Mari8X Community Edition`);
@@ -731,6 +823,7 @@ const httpServer = app.listen(PORT, () => {
   console.log(`📑 B/L PDF:     http://localhost:${PORT}/api/bl/:blNumber/pdf`);
   console.log(`🧑‍✈️ Onboarding:  http://localhost:${PORT}/onboard`);
   console.log(`📍 ETA Tracker: http://localhost:${PORT}/api/eta`);
+  console.log(`⏳ D&D Tracker: http://localhost:${PORT}/api/dd`);
   console.log(`❤️  Health:      http://localhost:${PORT}/health`);
   // Warm congestion cache on startup
   setTimeout(() => getTopCongestedPorts(20).catch(() => {}), 3000);
@@ -751,4 +844,12 @@ setEtaBroadcast((event: string, record: EtaRecord) => {
 wss.on('connection', (ws) => {
   // Send current ETA snapshot on connect
   ws.send(JSON.stringify({ event: 'ETA_SNAPSHOT', records: listAllETAs() }));
+});
+
+// Wire D&D broadcast to same WebSocket channel
+setDDBroadcast((event: string, record: DDRecord) => {
+  const msg = JSON.stringify({ event, record });
+  for (const client of wss.clients) {
+    if (client.readyState === 1 /* OPEN */) client.send(msg);
+  }
 });
