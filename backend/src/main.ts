@@ -35,6 +35,12 @@ import {
   getDDDashboard, setDDBroadcast, refreshAllDD,
 } from './agent/demurrage.js';
 import type { DDRecord } from './agent/demurrage.js';
+import {
+  openPortCall, advancePortCall, setPortCallStage, setDAEstimate,
+  getPortCall, getPortCallsByVoyage, listPortCallsByPort, listAllPortCalls,
+  getPortCallDashboard, setPortCallBroadcast,
+} from './agent/port-call.js';
+import type { PortCallRecord } from './agent/port-call.js';
 
 const app = express();
 const PORT = process.env.PORT || 4001;
@@ -814,6 +820,139 @@ app.post('/api/dd/refresh', (_req, res) => {
   }
 });
 
+// ── Port Call REST API ────────────────────────────────────────────────────────
+
+/**
+ * POST /api/portcall
+ * Open a new port call (stage: NOA_RECEIVED).
+ * Body: { voyageId, vesselName, vesselIMO?, portCode, portName?, eta?, notes?, updatedBy? }
+ */
+app.post('/api/portcall', express.json(), (req, res) => {
+  try {
+    const record = openPortCall(req.body);
+    res.status(201).json(record);
+  } catch (e) {
+    res.status(400).json({ error: (e as Error).message });
+  }
+});
+
+/**
+ * GET /api/portcall/dashboard — aggregated port call dashboard
+ */
+app.get('/api/portcall/dashboard', (_req, res) => {
+  try {
+    res.json(getPortCallDashboard());
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+/**
+ * GET /api/portcall — list all port calls
+ *   ?active=true  — only non-DEPARTED calls
+ */
+app.get('/api/portcall', (req, res) => {
+  try {
+    const activeOnly = (req.query as any).active === 'true';
+    res.json(listAllPortCalls(activeOnly));
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+/**
+ * GET /api/portcall/port/:portCode — port calls for a specific port
+ *   ?active=true  — only non-DEPARTED
+ */
+app.get('/api/portcall/port/:portCode', (req, res) => {
+  try {
+    const activeOnly = (req.query as any).active === 'true';
+    const records = listPortCallsByPort(req.params.portCode, activeOnly);
+    res.json({ portCode: req.params.portCode.toUpperCase(), count: records.length, records });
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+/**
+ * GET /api/portcall/voyage/:voyageId — all ports in a voyage
+ */
+app.get('/api/portcall/voyage/:voyageId', (req, res) => {
+  try {
+    const records = getPortCallsByVoyage(req.params.voyageId);
+    res.json({ voyageId: req.params.voyageId, count: records.length, records });
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+/**
+ * GET /api/portcall/:portCallId — single port call
+ */
+app.get('/api/portcall/:portCallId', (req, res) => {
+  try {
+    const record = getPortCall(req.params.portCallId);
+    if (!record) return res.status(404).json({ error: `Port call "${req.params.portCallId}" not found` });
+    res.json(record);
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message });
+  }
+});
+
+/**
+ * POST /api/portcall/:portCallId/advance
+ * Advance to the next stage.
+ * Body: { notes?, updatedBy? }
+ */
+app.post('/api/portcall/:portCallId/advance', express.json(), (req, res) => {
+  try {
+    const record = advancePortCall(req.params.portCallId, req.body ?? {});
+    res.json(record);
+  } catch (e) {
+    res.status(400).json({ error: (e as Error).message });
+  }
+});
+
+/**
+ * POST /api/portcall/:portCallId/stage
+ * Set a specific stage.
+ * Body: { stage, notes?, updatedBy? }
+ */
+app.post('/api/portcall/:portCallId/stage', express.json(), (req, res) => {
+  try {
+    const { stage, notes, updatedBy } = req.body as any;
+    if (!stage) return res.status(400).json({ error: 'stage is required' });
+    const record = setPortCallStage(req.params.portCallId, stage, { notes, updatedBy });
+    res.json(record);
+  } catch (e) {
+    res.status(400).json({ error: (e as Error).message });
+  }
+});
+
+/**
+ * POST /api/portcall/:portCallId/da
+ * Attach or update a DA estimate.
+ * Body: { portDuesUsd, pilotageUsd, towageUsd, agencyFeeUsd, miscUsd, totalUsd, currency? }
+ */
+app.post('/api/portcall/:portCallId/da', express.json(), (req, res) => {
+  try {
+    const da = req.body as any;
+    if (!da.totalUsd) return res.status(400).json({ error: 'totalUsd is required' });
+    const record = setDAEstimate(req.params.portCallId, {
+      portDuesUsd:  da.portDuesUsd  ?? 0,
+      pilotageUsd:  da.pilotageUsd  ?? 0,
+      towageUsd:    da.towageUsd    ?? 0,
+      agencyFeeUsd: da.agencyFeeUsd ?? 0,
+      miscUsd:      da.miscUsd      ?? 0,
+      totalUsd:     da.totalUsd,
+      currency:     da.currency     ?? 'USD',
+    });
+    res.json(record);
+  } catch (e) {
+    res.status(400).json({ error: (e as Error).message });
+  }
+});
+
 // Start server
 const httpServer = app.listen(PORT, () => {
   console.log(`🚢 Mari8X Community Edition`);
@@ -824,6 +963,7 @@ const httpServer = app.listen(PORT, () => {
   console.log(`🧑‍✈️ Onboarding:  http://localhost:${PORT}/onboard`);
   console.log(`📍 ETA Tracker: http://localhost:${PORT}/api/eta`);
   console.log(`⏳ D&D Tracker: http://localhost:${PORT}/api/dd`);
+  console.log(`🚢 Port Calls:  http://localhost:${PORT}/api/portcall`);
   console.log(`❤️  Health:      http://localhost:${PORT}/health`);
   // Warm congestion cache on startup
   setTimeout(() => getTopCongestedPorts(20).catch(() => {}), 3000);
@@ -848,6 +988,14 @@ wss.on('connection', (ws) => {
 
 // Wire D&D broadcast to same WebSocket channel
 setDDBroadcast((event: string, record: DDRecord) => {
+  const msg = JSON.stringify({ event, record });
+  for (const client of wss.clients) {
+    if (client.readyState === 1 /* OPEN */) client.send(msg);
+  }
+});
+
+// Wire Port Call broadcast to same WebSocket channel
+setPortCallBroadcast((event: string, record: PortCallRecord) => {
   const msg = JSON.stringify({ event, record });
   for (const client of wss.clients) {
     if (client.readyState === 1 /* OPEN */) client.send(msg);
