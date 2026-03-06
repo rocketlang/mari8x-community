@@ -1,0 +1,23 @@
+[
+  {
+    "id": "81e3b84c2498a873",
+    "email": "test@portclear.com",
+    "name": "Rajan Sharma",
+    "company": "PortClear Ltd",
+    "passwordHash": "4fbc873c41d1f2269494302e63c83df28bafd09ba86d496e450a1cd337e43f23",
+    "salt": "286cfea458db9037704682b45f034f19",
+    "apiKey": "m8x_0910513d1b2808f89808de33d2ae66c36c49c50b3f8234e0",
+    "ports": [
+      "SGSIN",
+      "INNSA",
+      "INPAV"
+    ],
+    "telegram": {
+      "botToken": "",
+      "chatId": "",
+      "enabled": false
+    },
+    "createdAt": "2026-02-26T07:33:33.487Z",
+    "lastLogin": "2026-02-26T07:33:33.493Z"
+  }
+]
