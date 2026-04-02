@@ -100,6 +100,7 @@ function loadReports(vesselId: string): NoonReport[] {
  * Submit a new noon report.
  * Computes cumulative distance + fuel from voyage history.
  */
+// @rule:MAR-007 @task:MAR-007 @capability:NOON_REPORT
 export function submitNoonReport(input: NoonReportInput): NoonReport {
   const history = loadReports(input.vesselId)
     .filter(r => r.voyageNumber === input.voyageNumber);

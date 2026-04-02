@@ -76,6 +76,7 @@ const SEARCH_RADIUS_NM  = 200;  // scan up to 200 nm
 const MIN_SPEED_KT      = 3;    // ignore anchored/drifting vessels
 const MAX_HEADING_DIFF  = 45;   // ±45° tolerance for "inbound" classification
 
+// @rule:MAR-001 @task:MAR-001 @capability:PRE_ARRIVAL_CHECK
 export async function getPreArrivalVessels(
   unlocode:    string,
   windowHours = 48,

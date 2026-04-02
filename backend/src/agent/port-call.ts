@@ -189,6 +189,7 @@ function nextStage(current: PortCallStage): PortCallStage | null {
 /**
  * Create or open a port call (stage = NOA_RECEIVED).
  */
+// @rule:MAR-YK-002 @task:MAR-YK-002 @capability:port-call-status
 export function openPortCall(input: PortCallInput): PortCallRecord {
   const data = loadAll();
   const portCallId = `${input.voyageId}_${input.portCode.toUpperCase()}`;

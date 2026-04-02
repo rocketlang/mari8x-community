@@ -16,6 +16,7 @@ import * as path from 'path';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
+// @rule:M8X-002 — vessel-registry
 export type VesselType =
   | 'BULKER'
   | 'TANKER'

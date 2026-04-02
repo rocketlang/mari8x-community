@@ -227,6 +227,7 @@ export interface CreateBLInput {
 }
 
 /** Create a B/L in DRAFT status */
+// @rule:MAR-004 @task:MAR-004 @capability:BL_DRAFT
 export function createBL(input: CreateBLInput): BillOfLading {
   const blNumber = generateBLNumber();
   const now      = new Date().toISOString();

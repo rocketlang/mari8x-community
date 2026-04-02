@@ -96,6 +96,7 @@ function computeStatus(originalETA: string, currentETA: string): { status: EtaSt
  * If a record already exists for voyageId, the history is appended and
  * currentETA is updated.  originalETA is never changed after first write.
  */
+// @rule:MAR-002 @task:MAR-002 @capability:ETA_UPDATE
 export function upsertETA(input: {
   voyageId:   string
   vesselName: string

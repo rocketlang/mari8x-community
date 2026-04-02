@@ -11,6 +11,7 @@
 import * as fs   from 'fs';
 import * as path from 'path';
 
+// @rule:M8X-008 — documents
 const DOCS_DIR = '/root/.ankr/state/mari8x-docs';
 
 // ── Doc catalogue ─────────────────────────────────────────────────────────────

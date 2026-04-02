@@ -19,6 +19,7 @@
 
 import { builder } from '../builder.js';
 import {
+// @rule:M8X-010 — crew-welfare
   listCrew, addCrewMember, signOffCrew, recordRestPeriod,
   getRestPeriods, checkMLCCompliance, getDocumentAlerts, getCrewSummary,
   type CrewMember, type RestPeriod, type MLCComplianceResult, type DocumentAlert,

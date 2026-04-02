@@ -18,6 +18,7 @@
 
 import { builder } from '../builder.js';
 import {
+// @rule:M8X-004 — port-call
   openPortCall, advancePortCall, setPortCallStage, setDAEstimate,
   getPortCall, getPortCallsByVoyage, listPortCallsByPort, listAllPortCalls,
   getPortCallDashboard,

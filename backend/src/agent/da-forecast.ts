@@ -127,6 +127,7 @@ export interface DAForecast {
 
 // ── Core ──────────────────────────────────────────────────────────────────────
 
+// @rule:MAR-006 @task:MAR-006 @capability:da-forecast
 export function forecastDA(unlocode: string, vessel: VesselSpec): DAForecast {
   const region  = regionFor(unlocode);
   const t       = TARIFFS[region];

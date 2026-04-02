@@ -20,6 +20,7 @@ import { listOpenChecklists } from './documents.js';
 
 // ── Haversine (copied locally to avoid circular dep) ─────────────────────────
 
+// @rule:M8X-002 — vessel-profile
 function haversineNm(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const R    = 3440.065;
   const dLat = (lat2 - lat1) * Math.PI / 180;

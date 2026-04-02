@@ -1,3 +1,4 @@
+// @rule:M8X-001 — Mari8x Community Platform main server
 /**
  * Mari8X Community Edition - Backend Server
  */
@@ -45,12 +46,17 @@ import {
   registerVessel, getVessel, searchVessels, listVessels,
   updateVessel, bulkImportFromPortCalls, getRegistryStats,
 } from './agent/vessel-registry.js';
+import { forjaRouter } from './routes/forja.js';
 
 const app = express();
 const PORT = process.env.PORT || 4001;
 
 // CORS
 app.use(cors());
+
+// ── Forja Protocol: STATE / TRUST / SENSE / PROOF ────────────────────────────
+app.use(express.json());
+app.use(forjaRouter);
 
 // Health check
 app.get('/health', (req, res) => {
@@ -1002,8 +1008,73 @@ app.patch('/api/vessels/:imo', express.json(), (req, res) => {
   }
 });
 
+// ── mar_rules: ensure table exists + seed on first run ───────────────────────
+async function ensureMarRules(): Promise<void> {
+  // Create table if not exists
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS mar_rules (
+      rule_id    TEXT PRIMARY KEY,
+      rule_type  TEXT NOT NULL,
+      domain     TEXT NOT NULL DEFAULT 'maritime',
+      title      TEXT NOT NULL,
+      statement  TEXT NOT NULL,
+      status     TEXT NOT NULL DEFAULT 'certified',
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `);
+
+  // Seed rules only if table is empty
+  const count = await prisma.$queryRawUnsafe<{ count: string }[]>(
+    `SELECT COUNT(*)::text as count FROM mar_rules`
+  );
+  if (parseInt(count[0]?.count ?? '0') > 0) return;
+
+  const rules = [
+    // Section A — Shastra (statute rules)
+    { rule_id: 'MAR-001', rule_type: 'statute', title: 'Port pre-arrival checklist obligation',
+      statement: 'A vessel intending to enter a port must submit a pre-arrival notification and complete the mandatory documentary checklist (NOA, crew list, cargo manifest, health declaration) no later than 24 hours before arrival.' },
+    { rule_id: 'MAR-002', rule_type: 'statute', title: 'ETA calculation',
+      statement: 'Estimated Time of Arrival (ETA) must be calculated as: ETA = current_position_time + (distance_nm / average_speed_knots). ETA must be communicated to the port agent and updated whenever speed or course changes materially.' },
+    { rule_id: 'MAR-003', rule_type: 'statute', title: 'Demurrage calculation',
+      statement: 'Demurrage accrues when laytime expires and the vessel is still detained. Daily rate is as agreed in the charterparty. Calculation: demurrage_days = max(0, days_at_port - free_days). Liability = demurrage_days × daily_rate_per_container.' },
+    { rule_id: 'MAR-004', rule_type: 'statute', title: 'Bill of lading issuance',
+      statement: 'A bill of lading must be issued to the shipper upon receipt of goods in apparent good order. It must state: shipper, consignee, notify party, port of loading, port of discharge, cargo description, container numbers, vessel name, voyage number.' },
+    { rule_id: 'MAR-005', rule_type: 'statute', title: 'Port congestion assessment',
+      statement: 'Port congestion level must be assessed based on vessel density within 25 nm of the port. Levels: low (score 0–9), moderate (10–24), high (25–49), critical (50+). Congestion score = anchorage_vessels×15 + approach_vessels×5.' },
+    { rule_id: 'MAR-006', rule_type: 'statute', title: 'Disbursement Account (DA) forecast',
+      statement: 'A Disbursement Account forecast must be prepared before port entry. Components: port dues (per GRT), pilotage, towage, wharfage, agency fees, miscellaneous. Accuracy target: ±25% of actual DA.' },
+    { rule_id: 'MAR-007', rule_type: 'statute', title: 'Noon report obligation',
+      statement: 'The Master must submit a noon position report daily at noon ship mean time. Report must include: position (lat/lon), speed, daily distance, cumulative voyage distance, bunkers consumed, weather, ETA next port.' },
+    { rule_id: 'MAR-008', rule_type: 'statute', title: 'Crew welfare minimum standards',
+      statement: 'Crew welfare must comply with MLC 2006 minimum standards: rest hours (10h/24h, 77h/7d), valid documentation (CoC, STCW), adequate accommodation, food, and medical care. Document expiry must be tracked with 30-day advance alerts.' },
+    // Section B — Yukti (meta-reasoning rules)
+    { rule_id: 'MAR-YK-001', rule_type: 'meta-reasoning', title: 'Laytime commencement',
+      statement: 'Laytime commences when: (1) the vessel is at the agreed place, (2) a valid NOR (Notice of Readiness) has been tendered, and (3) NOR has been accepted (or the acceptance period has expired per charterparty terms). Pre-conditions must be checked in sequence before laytime clock starts.' },
+    { rule_id: 'MAR-YK-002', rule_type: 'meta-reasoning', title: 'Port call sequence',
+      statement: 'A port call must progress through stages in sequence: NOA_RECEIVED → BERTHING_REQUESTED → BERTHED → CARGO_OPS → DEPARTURE_CLEARED → DEPARTED. Stage regression is not permitted. Each transition must be timestamped.' },
+    { rule_id: 'MAR-YK-003', rule_type: 'meta-reasoning', title: 'Risk escalation — congestion over 7 days',
+      statement: 'When a vessel has been waiting at anchorage for more than 7 days, a congestion alert must be escalated to the operator and agent. Estimated detention cost must be included in the alert. Escalation threshold: estimated_wait_hours > 168.' },
+  ];
+
+  for (const r of rules) {
+    await prisma.$executeRawUnsafe(
+      `INSERT INTO mar_rules (rule_id, rule_type, domain, title, statement, status)
+       VALUES ($1, $2, 'maritime', $3, $4, 'certified')
+       ON CONFLICT (rule_id) DO NOTHING`,
+      r.rule_id, r.rule_type, r.title, r.statement
+    );
+  }
+  console.log(`[mar_rules] Seeded ${rules.length} maritime rules.`);
+}
+
 // Start server
-const httpServer = app.listen(PORT, () => {
+const httpServer = app.listen(PORT, async () => {
+  // Ensure mar_rules table exists and is seeded
+  try {
+    await ensureMarRules();
+  } catch (e) {
+    console.error('[mar_rules] Table init failed (non-fatal):', (e as Error).message);
+  }
   console.log(`🚢 Mari8X Community Edition`);
   console.log(`📡 GraphQL API: http://localhost:${PORT}/graphql`);
   console.log(`🌊 Congestion:  http://localhost:${PORT}/api/congestion`);
@@ -1015,6 +1086,8 @@ const httpServer = app.listen(PORT, () => {
   console.log(`🚢 Port Calls:  http://localhost:${PORT}/api/portcall`);
   console.log(`🛳️  Vessel Reg:  http://localhost:${PORT}/api/vessels`);
   console.log(`❤️  Health:      http://localhost:${PORT}/health`);
+  console.log(`🔑 Forja STATE: http://localhost:${PORT}/api/v2/forja/state`);
+  console.log(`🔑 Forja PROOF: http://localhost:${PORT}/api/v2/forja/proof`);
   // Warm congestion cache on startup
   setTimeout(() => getTopCongestedPorts(20).catch(() => {}), 3000);
 });

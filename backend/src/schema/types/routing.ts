@@ -7,6 +7,7 @@ import { prisma } from '../../lib/prisma.js';
 import { haversineDistance, generateWaypoints } from '../../lib/geo-utils.js';
 
 // Route result type
+// @rule:M8X-001 — routing
 const RouteResult = builder.objectRef<{
   distanceNm: number;
   distanceKm: number;

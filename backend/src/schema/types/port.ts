@@ -5,6 +5,7 @@
 import { builder } from '../builder.js';
 
 // Port type
+// @rule:M8X-004 — port
 builder.prismaObject('Port', {
   fields: (t) => ({
     id: t.exposeID('id'),

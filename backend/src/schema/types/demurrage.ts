@@ -17,6 +17,7 @@
 
 import { builder } from '../builder.js';
 import {
+// @rule:M8X-012 — demurrage
   upsertDD, getDD, clearDD, listAllDD, listDDByPort,
   getDDAlerts, getDDDashboard, refreshAllDD,
   type DDRecord, type DDContainerDetail, type DDDashboard,

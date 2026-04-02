@@ -5,6 +5,7 @@
 import { builder } from '../builder.js';
 
 // Vessel type
+// @rule:M8X-002 — vessel
 builder.prismaObject('Vessel', {
   fields: (t) => ({
     id: t.exposeID('id'),

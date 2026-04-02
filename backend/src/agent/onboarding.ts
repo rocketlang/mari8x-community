@@ -13,6 +13,7 @@ import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
+// @rule:M8X-001 — onboarding
 const __dir = dirname(fileURLToPath(import.meta.url));
 const AGENTS_FILE = join(__dir, '../../agents.json');
 

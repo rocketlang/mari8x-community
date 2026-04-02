@@ -1,0 +1,37 @@
+{
+  "service_key": "mari8x-community",
+  "version": "1.0.0",
+  "can_answer": [
+    "Project documentation available",
+    "Domain rules: R-011, R-011, R-011",
+    "Domain rules: R-013, R-013, MAR-001, MAR-002, MAR-003",
+    "Deep knowledge documented",
+    "Project documentation available"
+  ],
+  "can_do": [
+    "Active TODO tasks defined"
+  ],
+  "emits": [],
+  "depends_on": [],
+  "forja_state": "/api/v2/forja/state",
+  "forja_trust": "/api/v2/forja/trust/:userId",
+  "forja_sense": "/api/v2/forja/sense/emit",
+  "forja_proof": "/api/v2/forja/proof",
+  "forja_version": "2.0",
+  "trust_mask": 1,
+  "trust_mask_schema": "ankr-trust-32bit-v1",
+  "k_mask": 31,
+  "k_mask_schema": "ankr-prajna-8bit-v1",
+  "claude_ankr_mask": 0,
+  "claude_ankr_mask_schema": "claude-ankr-5bit-v1",
+  "claw_mask": 0,
+  "claw_mask_schema": "claw-design-16bit-v1",
+  "proof_config": {
+    "engine": "rule-annotation",
+    "min_coverage": 0.5
+  },
+  "capability_audit": {
+    "status": "pending",
+    "last_audited": null
+  }
+}

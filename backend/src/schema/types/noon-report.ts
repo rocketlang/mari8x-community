@@ -15,6 +15,7 @@
 
 import { builder } from '../builder.js';
 import {
+// @rule:M8X-013 — noon-report
   submitNoonReport, getNoonReports, getLatestNoonReport, getVoyageSummary,
   type NoonReport, type NoonReportInput,
 } from '../../agent/noon-report.js';

@@ -29,6 +29,7 @@ import { getPortCongestion }        from '../congestion/engine.js';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
+// @rule:M8X-006 — alerts
 export type AlertType     = 'ETA_IMMINENT' | 'DG_INBOUND' | 'DOC_OVERDUE' | 'HIGH_CONGESTION';
 export type AlertSeverity = 'INFO' | 'WARNING' | 'CRITICAL';
 

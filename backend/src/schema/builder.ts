@@ -7,6 +7,7 @@ import PrismaPlugin from '@pothos/plugin-prisma';
 import type PrismaTypes from '@pothos/plugin-prisma/generated';
 import { prisma } from '../lib/prisma.js';
 
+// @rule:M8X-001 — builder
 export const builder = new SchemaBuilder<{
   PrismaTypes: PrismaTypes;
   Scalars: {

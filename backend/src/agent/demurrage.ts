@@ -186,6 +186,7 @@ function updateIndex(record: DDRecord): void {
  * Create or update a D&D record for a B/L.
  * Pass containers to add/replace; pass rules to override defaults.
  */
+// @rule:MAR-003 @rule:MAR-YK-001 @task:MAR-003 @capability:DEMURRAGE_CALCULATE
 export function upsertDD(input: {
   blNumber:       string
   voyageId?:      string

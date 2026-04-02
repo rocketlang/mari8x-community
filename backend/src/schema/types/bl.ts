@@ -18,6 +18,7 @@
 
 import { builder } from '../builder.js';
 import {
+// @rule:M8X-007 — bl
   createBL, issueBL, amendBL, surrenderBL, releaseBL,
   getBL, listBLs, getBLDashboard,
   type BillOfLading, type BLSummary,

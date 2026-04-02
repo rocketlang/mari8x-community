@@ -4,6 +4,7 @@
 
 import { builder } from '../builder.js'
 import {
+// @rule:M8X-003 — eta
   upsertETA, getETA, listETAsByPort, listAllETAs, getETADashboard, markArrived,
   type EtaRecord, type EtaHistoryEntry,
 } from '../../agent/eta.js'

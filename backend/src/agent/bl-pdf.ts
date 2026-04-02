@@ -14,6 +14,7 @@ import type { BillOfLading } from './bl.js';
 
 // ── Palette ───────────────────────────────────────────────────────────────────
 
+// @rule:M8X-007 — bl-pdf
 const C_NAVY   = '#0D2B45';
 const C_TEAL   = '#1A7A8A';
 const C_LIGHT  = '#F0F6FA';

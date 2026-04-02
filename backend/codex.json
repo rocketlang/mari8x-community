@@ -1,0 +1,105 @@
+{
+  "service": "mari8x-community",
+  "port": 4072,
+  "domain": "maritime",
+  "description": "Mari8x Community Platform \u2014 vessel port call operations, pre-arrival checks, ETA management, demurrage calculations, B/L drafts, da-forecasts, noon reports.",
+  "can_answer": [
+    "port-congestion",
+    "eta-estimate",
+    "demurrage-calculation",
+    "bl-status",
+    "da-forecast"
+  ],
+  "can_do": [
+    "PRE_ARRIVAL_CHECK",
+    "DEMURRAGE_CALCULATE",
+    "BL_DRAFT",
+    "ETA_UPDATE",
+    "NOON_REPORT",
+    "CREW_WELFARE_LOG"
+  ],
+  "emits": [
+    "pre_arrival_overdue",
+    "eta_updated",
+    "demurrage_accruing",
+    "congestion_alert",
+    "bl_issued"
+  ],
+  "depends_on": [],
+  "forja_state": "http://localhost:4072/api/v2/forja/state",
+  "forja_trust": "http://localhost:4072/api/v2/forja/trust",
+  "forja_sense": "http://localhost:4072/api/v2/forja/sense/emit",
+  "forja_proof": "http://localhost:4072/api/v2/forja/proof",
+  "forja_version": "2.0",
+  "status": "active",
+  "trust_mask": 132991,
+  "trust_mask_schema": "ankr-32bit-v1",
+  "trust_mask_status": "cca-verified",
+  "trust_mask_note": "CCA 2026-04-03. Universal 7/8, Maritime BOOK+MANIFEST+BL_ISSUE, Logistics TRACK. Mask: 132991.",
+  "claude_ankr_mask": 0,
+  "claude_ankr_mask_schema": "claude-ankr-5bit-v1",
+  "knowledge_gap": {
+    "last_woodpecker_run": "2026-04-01",
+    "extraction_quality": "rich",
+    "missing_docs": [
+      "brainstorm",
+      "project",
+      "logics",
+      "todo",
+      "deep-knowledge"
+    ],
+    "has_brainstorm": false,
+    "has_project": false,
+    "has_logics": false,
+    "has_todo": false,
+    "has_deep_knowledge": false,
+    "status": "provisional \u2014 ready for R-011 enrichment"
+  },
+  "lifecycle": {
+    "status": "built",
+    "woodpecker_seeded": "2026-04-01",
+    "build_complete": "2026-04-03",
+    "cca_complete": "2026-04-03",
+    "forja_live": false,
+    "note": "CCA + PROOF 2026-04-03. 5 models, 15 agents, community maritime platform."
+  },
+  "capability_audit": {
+    "audit_date": "2026-04-03",
+    "audit_method": "human-code-review",
+    "audit_status": "complete",
+    "note": "5 Prisma models, 15 agent modules, 14 schema types, Pothos GraphQL. Port congestion, BL generation, ETA, demurrage, crew welfare.",
+    "can_answer_status": {
+      "port-congestion": "\u2705",
+      "eta-estimate": "\u2705",
+      "demurrage-calculation": "\u2705",
+      "bl-status": "\u2705",
+      "da-forecast": "\u2705"
+    },
+    "can_do_status": {
+      "PRE_ARRIVAL_CHECK": "\u2705",
+      "DEMURRAGE_CALCULATE": "\u2705",
+      "BL_DRAFT": "\u2705",
+      "ETA_UPDATE": "\u2705",
+      "NOON_REPORT": "\u2705",
+      "CREW_WELFARE_LOG": "\u2705"
+    },
+    "counts": {
+      "built": 11,
+      "partial": 0,
+      "unknown": 0,
+      "not_built": 0
+    }
+  },
+  "version": "1.1.0",
+  "k_mask": 255,
+  "k_mask_schema": "ankr-prajna-8bit-v1",
+  "k_mask_note": "ALL 8 BITS SET. Docs from woodpecker, PROOF 100% (30/30 files).",
+  "proof_config": {
+    "rules_annotated": 30,
+    "decision_points": 30,
+    "coverage_pct": 100.0,
+    "annotation_sweep_status": "complete",
+    "last_sweep": "2026-04-03T00:00:00.000Z",
+    "note": "30 files: 14 schema + 15 agents + main.ts. M8X-001..013 rule IDs."
+  }
+}

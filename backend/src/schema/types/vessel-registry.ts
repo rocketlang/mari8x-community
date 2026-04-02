@@ -17,6 +17,7 @@
 
 import { builder } from '../builder.js';
 import {
+// @rule:M8X-002 — vessel-registry
   registerVessel, getVessel, searchVessels, listVessels,
   updateVessel, bulkImportFromPortCalls, getRegistryStats,
   type VesselParticulars,
@@ -61,7 +62,9 @@ const ImportResultType = builder.objectRef<{ imported: number; skipped: number }
 
 // ── Queries ───────────────────────────────────────────────────────────────────
 
-builder.queryField('vessel', t =>
+// Note: 'vessel' and 'vessels' fields are owned by vessel.ts (Prisma-backed).
+// Registry queries use distinct names to avoid schema conflicts.
+builder.queryField('registryVessel', t =>
   t.field({
     type:     VesselParticularsType,
     nullable: true,
@@ -70,7 +73,7 @@ builder.queryField('vessel', t =>
   })
 );
 
-builder.queryField('vessels', t =>
+builder.queryField('registryVessels', t =>
   t.field({
     type:    [VesselParticularsType],
     args:    {

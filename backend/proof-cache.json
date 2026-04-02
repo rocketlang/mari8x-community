@@ -1,0 +1,263 @@
+{
+  "service": "mari8x-community",
+  "extracted_at": "2026-03-16T19:32:11.913Z",
+  "source_dir": "/root/mari8x-community/backend/src",
+  "files_scanned": 35,
+  "annotations_found": 17,
+  "unique_rules_referenced": 15,
+  "by_rule": {
+    "MAR-004": [
+      {
+        "file": "agent/bl.ts",
+        "line": 230,
+        "capability": "BL_DRAFT"
+      }
+    ],
+    "MAR-008": [
+      {
+        "file": "agent/crew-welfare.ts",
+        "line": 135,
+        "capability": "CREW_WELFARE_LOG"
+      }
+    ],
+    "MAR-006": [
+      {
+        "file": "agent/da-forecast.ts",
+        "line": 130,
+        "capability": "da-forecast"
+      }
+    ],
+    "MAR-003": [
+      {
+        "file": "agent/demurrage.ts",
+        "line": 189,
+        "capability": "DEMURRAGE_CALCULATE"
+      }
+    ],
+    "MAR-YK-001": [
+      {
+        "file": "agent/demurrage.ts",
+        "line": 189,
+        "capability": "DEMURRAGE_CALCULATE"
+      }
+    ],
+    "MAR-002": [
+      {
+        "file": "agent/eta.ts",
+        "line": 99,
+        "capability": "ETA_UPDATE"
+      }
+    ],
+    "MAR-007": [
+      {
+        "file": "agent/noon-report.ts",
+        "line": 103,
+        "capability": "NOON_REPORT"
+      }
+    ],
+    "MAR-YK-002": [
+      {
+        "file": "agent/port-call.ts",
+        "line": 192,
+        "capability": "port-call-status"
+      }
+    ],
+    "MAR-001": [
+      {
+        "file": "agent/pre-arrival.ts",
+        "line": 79,
+        "capability": "PRE_ARRIVAL_CHECK"
+      }
+    ],
+    "MAR-005": [
+      {
+        "file": "congestion/engine.ts",
+        "line": 112,
+        "capability": "port-congestion"
+      }
+    ],
+    "MAR-YK-003": [
+      {
+        "file": "congestion/engine.ts",
+        "line": 112,
+        "capability": "port-congestion"
+      }
+    ],
+    "FRJ-P-001": [
+      {
+        "file": "routes/forja.ts",
+        "line": 25,
+        "capability": null
+      },
+      {
+        "file": "routes/forja.ts",
+        "line": 186,
+        "capability": null
+      }
+    ],
+    "FRJ-P-005": [
+      {
+        "file": "routes/forja.ts",
+        "line": 26,
+        "capability": null
+      },
+      {
+        "file": "routes/forja.ts",
+        "line": 187,
+        "capability": null
+      }
+    ],
+    "FRJ-P-006": [
+      {
+        "file": "routes/forja.ts",
+        "line": 188,
+        "capability": null
+      }
+    ],
+    "FRJ-P-007": [
+      {
+        "file": "routes/forja.ts",
+        "line": 325,
+        "capability": null
+      }
+    ]
+  },
+  "annotations": [
+    {
+      "rule_id": "MAR-004",
+      "task_id": "MAR-004",
+      "capability": "BL_DRAFT",
+      "file": "agent/bl.ts",
+      "line": 230,
+      "raw": "// @rule:MAR-004 @task:MAR-004 @capability:BL_DRAFT"
+    },
+    {
+      "rule_id": "MAR-008",
+      "task_id": "MAR-008",
+      "capability": "CREW_WELFARE_LOG",
+      "file": "agent/crew-welfare.ts",
+      "line": 135,
+      "raw": "// @rule:MAR-008 @task:MAR-008 @capability:CREW_WELFARE_LOG"
+    },
+    {
+      "rule_id": "MAR-006",
+      "task_id": "MAR-006",
+      "capability": "da-forecast",
+      "file": "agent/da-forecast.ts",
+      "line": 130,
+      "raw": "// @rule:MAR-006 @task:MAR-006 @capability:da-forecast"
+    },
+    {
+      "rule_id": "MAR-003",
+      "task_id": "MAR-003",
+      "capability": "DEMURRAGE_CALCULATE",
+      "file": "agent/demurrage.ts",
+      "line": 189,
+      "raw": "// @rule:MAR-003 @rule:MAR-YK-001 @task:MAR-003 @capability:DEMURRAGE_CALCULATE"
+    },
+    {
+      "rule_id": "MAR-YK-001",
+      "task_id": "MAR-003",
+      "capability": "DEMURRAGE_CALCULATE",
+      "file": "agent/demurrage.ts",
+      "line": 189,
+      "raw": "// @rule:MAR-003 @rule:MAR-YK-001 @task:MAR-003 @capability:DEMURRAGE_CALCULATE"
+    },
+    {
+      "rule_id": "MAR-002",
+      "task_id": "MAR-002",
+      "capability": "ETA_UPDATE",
+      "file": "agent/eta.ts",
+      "line": 99,
+      "raw": "// @rule:MAR-002 @task:MAR-002 @capability:ETA_UPDATE"
+    },
+    {
+      "rule_id": "MAR-007",
+      "task_id": "MAR-007",
+      "capability": "NOON_REPORT",
+      "file": "agent/noon-report.ts",
+      "line": 103,
+      "raw": "// @rule:MAR-007 @task:MAR-007 @capability:NOON_REPORT"
+    },
+    {
+      "rule_id": "MAR-YK-002",
+      "task_id": "MAR-YK-002",
+      "capability": "port-call-status",
+      "file": "agent/port-call.ts",
+      "line": 192,
+      "raw": "// @rule:MAR-YK-002 @task:MAR-YK-002 @capability:port-call-status"
+    },
+    {
+      "rule_id": "MAR-001",
+      "task_id": "MAR-001",
+      "capability": "PRE_ARRIVAL_CHECK",
+      "file": "agent/pre-arrival.ts",
+      "line": 79,
+      "raw": "// @rule:MAR-001 @task:MAR-001 @capability:PRE_ARRIVAL_CHECK"
+    },
+    {
+      "rule_id": "MAR-005",
+      "task_id": "MAR-005",
+      "capability": "port-congestion",
+      "file": "congestion/engine.ts",
+      "line": 112,
+      "raw": "// @rule:MAR-005 @rule:MAR-YK-003 @task:MAR-005 @capability:port-congestion"
+    },
+    {
+      "rule_id": "MAR-YK-003",
+      "task_id": "MAR-005",
+      "capability": "port-congestion",
+      "file": "congestion/engine.ts",
+      "line": 112,
+      "raw": "// @rule:MAR-005 @rule:MAR-YK-003 @task:MAR-005 @capability:port-congestion"
+    },
+    {
+      "rule_id": "FRJ-P-001",
+      "task_id": null,
+      "capability": null,
+      "file": "routes/forja.ts",
+      "line": 25,
+      "raw": "* @rule:FRJ-P-001  Every Forja service in a regulated domain MUST implement PROOF"
+    },
+    {
+      "rule_id": "FRJ-P-005",
+      "task_id": null,
+      "capability": null,
+      "file": "routes/forja.ts",
+      "line": 26,
+      "raw": "* @rule:FRJ-P-005  PROOF endpoint MUST be publicly accessible without authentication"
+    },
+    {
+      "rule_id": "FRJ-P-001",
+      "task_id": null,
+      "capability": null,
+      "file": "routes/forja.ts",
+      "line": 186,
+      "raw": "// @rule:FRJ-P-001  Every Forja service in a regulated domain MUST implement PROOF"
+    },
+    {
+      "rule_id": "FRJ-P-005",
+      "task_id": null,
+      "capability": null,
+      "file": "routes/forja.ts",
+      "line": 187,
+      "raw": "// @rule:FRJ-P-005  PROOF endpoint MUST be publicly accessible without authentication"
+    },
+    {
+      "rule_id": "FRJ-P-006",
+      "task_id": null,
+      "capability": null,
+      "file": "routes/forja.ts",
+      "line": 188,
+      "raw": "// @rule:FRJ-P-006  Coverage calculated against certified rules only"
+    },
+    {
+      "rule_id": "FRJ-P-007",
+      "task_id": null,
+      "capability": null,
+      "file": "routes/forja.ts",
+      "line": 325,
+      "raw": "// @rule:FRJ-P-007  PROOF snapshots retained for 90 days minimum"
+    }
+  ]
+}

@@ -3,6 +3,7 @@
  * Returns self-contained single-page onboarding wizard HTML
  */
 
+// @rule:M8X-001 — onboarding-html
 export function buildOnboardingHtml(): string {
   return `<!DOCTYPE html>
 <html lang="en">

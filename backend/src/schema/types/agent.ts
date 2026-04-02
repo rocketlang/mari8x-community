@@ -14,6 +14,7 @@
 
 import { builder } from '../builder.js';
 import {
+// @rule:M8X-001 — agent
   getPreArrivalVessels,
 }                          from '../../agent/pre-arrival.js';
 import { getVesselProfile } from '../../agent/vessel-profile.js';

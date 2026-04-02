@@ -132,6 +132,7 @@ export function listCrew(vesselId: string, onboardOnly = true): CrewMember[] {
   return crew.sort((a, b) => a.lastName.localeCompare(b.lastName));
 }
 
+// @rule:MAR-008 @task:MAR-008 @capability:CREW_WELFARE_LOG
 export function addCrewMember(vesselId: string, input: Omit<CrewMember, 'id' | 'createdAt' | 'updatedAt' | 'vesselId'>): CrewMember {
   const crew = loadCrew(vesselId);
   const now = new Date().toISOString();

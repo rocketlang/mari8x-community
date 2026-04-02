@@ -5,6 +5,7 @@
 
 import { builder } from '../builder.js';
 import {
+// @rule:M8X-001 — amosconnect
   submitNoonReport,
   getNoonReports,
   getLatestNoonReport,
@@ -143,31 +144,9 @@ builder.queryFields((t) => ({
     resolve: (_, args) => listCrew(args.vesselId, args.onboardOnly ?? true) as any[],
   }),
 
-  mlcCompliance: t.field({
-    type: ['JSON'],
-    args: {
-      vesselId: t.arg.string({ required: true }),
-      date:     t.arg.string({ required: true }),
-    },
-    resolve: (_, args) => checkMLCCompliance(args.vesselId, args.date) as any[],
-  }),
-
-  documentAlerts: t.field({
-    type: ['JSON'],
-    args: { vesselId: t.arg.string({ required: true }) },
-    resolve: (_, args) => getDocumentAlerts(args.vesselId).map(a => ({
-      ...a,
-      documentType:   a.document.type,
-      documentNumber: a.document.number,
-      expiryDate:     a.document.expiryDate,
-    })) as any[],
-  }),
-
-  crewSummary: t.field({
-    type: 'JSON',
-    args: { vesselId: t.arg.string({ required: true }) },
-    resolve: (_, args) => getCrewSummary(args.vesselId),
-  }),
+  // mlcCompliance removed: owned by crew-welfare.ts (full MLC 2006 implementation)
+  // documentAlerts removed: owned by crew-welfare.ts
+  // crewSummary removed: owned by crew-welfare.ts
 }));
 
 // ── Mutations ─────────────────────────────────────────────────────────────────
@@ -179,31 +158,5 @@ builder.mutationFields((t) => ({
     resolve: (_, args) => submitNoonReport(args.input as NoonReportInput),
   }),
 
-  addCrewMember: t.field({
-    type: 'JSON',
-    args: {
-      vesselId: t.arg.string({ required: true }),
-      input:    t.arg({ type: 'JSON', required: true }),
-    },
-    resolve: (_, args) => addCrewMember(args.vesselId, args.input as any),
-  }),
-
-  signOffCrew: t.field({
-    type: 'JSON',
-    args: {
-      vesselId:      t.arg.string({ required: true }),
-      crewMemberId:  t.arg.string({ required: true }),
-      signOffDate:   t.arg.string({ required: true }),
-    },
-    resolve: (_, args) => signOffCrew(args.vesselId, args.crewMemberId, args.signOffDate),
-  }),
-
-  recordRestPeriod: t.field({
-    type: 'JSON',
-    args: {
-      vesselId: t.arg.string({ required: true }),
-      input:    t.arg({ type: 'JSON', required: true }),
-    },
-    resolve: (_, args) => recordRestPeriod(args.vesselId, args.input as any),
-  }),
+  // addCrewMember, signOffCrew, recordRestPeriod removed: owned by crew-welfare.ts
 }));

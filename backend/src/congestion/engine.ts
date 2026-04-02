@@ -109,6 +109,7 @@ function fireWebhook(data: CongestionData): void {
 
 // ── Core computation ──────────────────────────────────────────────────────────
 
+// @rule:MAR-005 @rule:MAR-YK-003 @task:MAR-005 @capability:port-congestion
 export async function getPortCongestion(unlocode: string): Promise<CongestionData | null> {
   const upper = unlocode.toUpperCase();
 
