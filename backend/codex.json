@@ -101,5 +101,12 @@
     "annotation_sweep_status": "complete",
     "last_sweep": "2026-04-03T00:00:00.000Z",
     "note": "30 files: 14 schema + 15 agents + main.ts. M8X-001..013 rule IDs."
+  },
+  "paths": {
+    "repo": "mari8x-community",
+    "repo_type": "standalone",
+    "repo_root": "/root/mari8x-community",
+    "backend": "backend",
+    "frontend": "frontend"
   }
 }
