@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { ApolloClient, InMemoryCache, ApolloProvider } from '@apollo/client';
 import App from './App';
 
+// @rule:ANKR-001 — mainx
 const client = new ApolloClient({
   uri: import.meta.env.VITE_GRAPHQL_ENDPOINT || 'http://localhost:4001/graphql',
   cache: new InMemoryCache(),

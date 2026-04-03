@@ -6,6 +6,7 @@
  * Calculate distance between two points using Haversine formula
  * @returns Distance in nautical miles
  */
+// @rule:ANKR-001 — geo-utils
 export function haversineDistance(
   lat1: number,
   lon1: number,

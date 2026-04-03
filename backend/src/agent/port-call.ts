@@ -19,6 +19,7 @@ import * as path from 'path';
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 export type PortCallStage =
+// @rule:ANKR-001 — port-call
   | 'NOA_RECEIVED'
   | 'BERTHING_REQUESTED'
   | 'BERTHED'

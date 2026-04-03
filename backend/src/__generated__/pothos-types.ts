@@ -1,3 +1,4 @@
+// @rule:ANKR-001 — pothos-types
 /* eslint-disable */
 import type { Prisma, User, Organization, Vessel, VesselPosition, Port } from "/root/mari8x-community/backend/node_modules/@prisma/client/index.js";
 import type { PothosPrismaDatamodel } from "@pothos/plugin-prisma";

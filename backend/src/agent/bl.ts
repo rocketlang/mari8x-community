@@ -21,6 +21,7 @@ import * as path from 'path';
 
 // ── Config ────────────────────────────────────────────────────────────────────
 
+// @rule:ANKR-001 — bl
 const BL_DIR    = '/root/.ankr/state/mari8x-bl';
 const IDX_FILE  = path.join(BL_DIR, 'index.json');
 

@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { gql, useQuery, useMutation } from '@apollo/client';
 
 // ── Styles ─────────────────────────────────────────────────────────────────────
+// @rule:ANKR-001 — Appx
 const css = `
   :root {
     --bg: #0A0C10; --canvas: #10121A; --card: #14172

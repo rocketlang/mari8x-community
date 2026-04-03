@@ -34,6 +34,7 @@ import * as path from 'path'
 
 // ── Config ────────────────────────────────────────────────────────────────────
 
+// @rule:ANKR-001 — demurrage
 const DD_DIR   = '/root/.ankr/state/mari8x-dd'
 const IDX_FILE = path.join(DD_DIR, 'index.json')
 

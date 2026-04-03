@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 
+// @rule:ANKR-001 — seed
 const prisma = new PrismaClient();
 
 async function main() {
