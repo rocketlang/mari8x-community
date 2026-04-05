@@ -2,7 +2,7 @@
   "service": "mari8x-community",
   "port": 4072,
   "domain": "maritime",
-  "description": "Mari8x Community Platform \u2014 vessel port call operations, pre-arrival checks, ETA management, demurrage calculations, B/L drafts, da-forecasts, noon reports.",
+  "description": "Mari8x Community Platform — vessel port call operations, pre-arrival checks, ETA management, demurrage calculations, B/L drafts, da-forecasts, noon reports.",
   "can_answer": [
     "port-congestion",
     "eta-estimate",
@@ -36,7 +36,7 @@
   "trust_mask_schema": "ankr-32bit-v1",
   "trust_mask_status": "cca-verified",
   "trust_mask_note": "CCA 2026-04-03. Universal 7/8, Maritime BOOK+MANIFEST+BL_ISSUE, Logistics TRACK. Mask: 132991.",
-  "claude_ankr_mask": 0,
+  "claude_ankr_mask": 2,
   "claude_ankr_mask_schema": "claude-ankr-5bit-v1",
   "knowledge_gap": {
     "last_woodpecker_run": "2026-04-01",
@@ -53,7 +53,7 @@
     "has_logics": false,
     "has_todo": false,
     "has_deep_knowledge": false,
-    "status": "provisional \u2014 ready for R-011 enrichment"
+    "status": "provisional — ready for R-011 enrichment"
   },
   "lifecycle": {
     "status": "built",
@@ -69,19 +69,19 @@
     "audit_status": "complete",
     "note": "5 Prisma models, 15 agent modules, 14 schema types, Pothos GraphQL. Port congestion, BL generation, ETA, demurrage, crew welfare.",
     "can_answer_status": {
-      "port-congestion": "\u2705",
-      "eta-estimate": "\u2705",
-      "demurrage-calculation": "\u2705",
-      "bl-status": "\u2705",
-      "da-forecast": "\u2705"
+      "port-congestion": "✅",
+      "eta-estimate": "✅",
+      "demurrage-calculation": "✅",
+      "bl-status": "✅",
+      "da-forecast": "✅"
     },
     "can_do_status": {
-      "PRE_ARRIVAL_CHECK": "\u2705",
-      "DEMURRAGE_CALCULATE": "\u2705",
-      "BL_DRAFT": "\u2705",
-      "ETA_UPDATE": "\u2705",
-      "NOON_REPORT": "\u2705",
-      "CREW_WELFARE_LOG": "\u2705"
+      "PRE_ARRIVAL_CHECK": "✅",
+      "DEMURRAGE_CALCULATE": "✅",
+      "BL_DRAFT": "✅",
+      "ETA_UPDATE": "✅",
+      "NOON_REPORT": "✅",
+      "CREW_WELFARE_LOG": "✅"
     },
     "counts": {
       "built": 11,
@@ -108,5 +108,9 @@
     "repo_root": "/root/mari8x-community",
     "backend": "backend",
     "frontend": "frontend"
-  }
+  },
+  "claw_mask": 2509,
+  "claw_mask_note": "7/16: 0,2,3,6,7,8,11. /health + billsOfLading(limit??50) + @rule:M8X-001..013 (30 files). emits=5. Express app, not in ankr-labs-nx. Gaps: Bit1 Bit4 Bit5(no addHook) Bit9 Bit10 Bit12(no duration_ms) Bit13 Bit14 Bit15. Audit 2026-04-05.",
+  "claw_mask_schema": "claw-design-16bit-v1",
+  "claude_ankr_mask_note": "CA-001 no overflow ❌ CA-002 no force:true, no DELETE ops ✅ CA-003 no before/after ❌ CA-004 no duration_ms in resolvers ❌ CA-005 no AI content ❌"
 }
