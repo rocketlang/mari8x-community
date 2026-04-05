@@ -36,7 +36,7 @@
   "trust_mask_schema": "ankr-32bit-v1",
   "trust_mask_status": "cca-verified",
   "trust_mask_note": "CCA 2026-04-03. Universal 7/8, Maritime BOOK+MANIFEST+BL_ISSUE, Logistics TRACK. Mask: 132991.",
-  "claude_ankr_mask": 2,
+  "claude_ankr_mask": 14,
   "claude_ankr_mask_schema": "claude-ankr-5bit-v1",
   "knowledge_gap": {
     "last_woodpecker_run": "2026-04-01",
@@ -109,8 +109,8 @@
     "backend": "backend",
     "frontend": "frontend"
   },
-  "claw_mask": 2509,
-  "claw_mask_note": "7/16: 0,2,3,6,7,8,11. /health + billsOfLading(limit??50) + @rule:M8X-001..013 (30 files). emits=5. Express app, not in ankr-labs-nx. Gaps: Bit1 Bit4 Bit5(no addHook) Bit9 Bit10 Bit12(no duration_ms) Bit13 Bit14 Bit15. Audit 2026-04-05.",
+  "claw_mask": 2511,
+  "claw_mask_note": "8/16: Bits 0,1,2,3,6,7,8,11. Added Bit1: CA-003 before/after enforced in src/routes/forja.ts (missed in prior audit). Other bits confirmed. Gaps: Bit5(no global addHook) Bit12(business routes lack duration_ms) Bit13 Bit14 Bit15. Audited 2026-04-05.",
   "claw_mask_schema": "claw-design-16bit-v1",
-  "claude_ankr_mask_note": "CA-001 no overflow ❌ CA-002 no force:true, no DELETE ops ✅ CA-003 no before/after ❌ CA-004 no duration_ms in resolvers ❌ CA-005 no AI content ❌"
+  "claude_ankr_mask_note": "CA-002 no force:true ✅ CA-003 before/after + delta in SENSE ✅ CA-004 _meta on all Forja endpoints ✅ CA-001 no overflow ❌ CA-005 no AI content ❌"
 }
