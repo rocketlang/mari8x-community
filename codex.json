@@ -20,11 +20,11 @@
   "forja_version": "2.0",
   "trust_mask": 1,
   "trust_mask_schema": "ankr-trust-32bit-v1",
-  "k_mask": 31,
+  "k_mask": 255,
   "k_mask_schema": "ankr-prajna-8bit-v1",
-  "claude_ankr_mask": 0,
+  "claude_ankr_mask": 8,
   "claude_ankr_mask_schema": "claude-ankr-5bit-v1",
-  "claw_mask": 0,
+  "claw_mask": 133,
   "claw_mask_schema": "claw-design-16bit-v1",
   "proof_config": {
     "engine": "rule-annotation",
@@ -33,5 +33,12 @@
   "capability_audit": {
     "status": "pending",
     "last_audited": null
-  }
+  },
+  "req_mask": 16777408,
+  "req_mask_schema": "ankr-req-32bit-v1",
+  "req_mask_source": "declared",
+  "granthx_indexed": true,
+  "claw_mask_source": "samiksha-audit-2026-05-07",
+  "claw_mask_notes": "bits 0,2,7 set. Gaps: bit1(before_snapshot missing in SENSE), bit5(no trust prehandler), bit6(delete ops need confirm_delete pattern)",
+  "claude_ankr_mask_notes": "CA-004 passes only. CA-001(no overflow_ref), CA-002(delete ops without named consent), CA-003(no before_snapshot), CA-005(no human_modified)"
 }
