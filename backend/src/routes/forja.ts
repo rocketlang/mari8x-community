@@ -29,6 +29,9 @@
 import { Router, Request, Response } from 'express';
 import { prisma } from '../lib/prisma.js';
 import { TRUST_PERM, MARITIME_ROLE_MASK, ROLE_MASK, describePerms, TRUST_MASK_SCHEMA } from '@ankr/trust-constants';
+import { buildForjaState } from '/root/ankr-forja-state.ts';
+
+const MARI8X_COMMUNITY_CODEX_PATH = '/root/mari8x-community/backend/codex.json';
 // @rule:BMK-001 — trust_mask is a 32-bit integer published alongside string roles
 // @rule:BMK-002 — bit positions come from @ankr/trust-constants only
 
@@ -95,24 +98,26 @@ export const forjaRouter = Router();
 
 // ── STATE: service capability manifest ───────────────────────────────────────
 forjaRouter.get('/api/v2/forja/state', async (_req: Request, res: Response) => {
+  const t0 = Date.now();
   try {
-    // Live counts from DB for enriched manifest
     const [vesselCount, portCount] = await Promise.all([
       prisma.vessel.count().catch(() => 0),
       prisma.port.count().catch(() => 0),
     ]);
-
-    res.json({
-      service:       'mari8x-community',
-      domain:        'maritime',
-      forja_version: '2.0',
-      can_answer:    CAN_ANSWER,
-      can_do:        CAN_DO,
-      emits:         EMITS,
-      vessel_count:  vesselCount,
-      port_count:    portCount,
-      generated_at:  new Date().toISOString(),
-    });
+    res.json(buildForjaState({
+      codexPath: MARI8X_COMMUNITY_CODEX_PATH,
+      runtime: {
+        service: 'mari8x-community',
+        domain: 'maritime',
+        can_answer: CAN_ANSWER,
+        can_do: CAN_DO,
+        emits: EMITS,
+        vessel_count: vesselCount,
+        port_count: portCount,
+        generated_at: new Date().toISOString(),
+        _meta: { duration_ms: Date.now() - t0, trust_mask_applied: 1 },
+      },
+    }));
   } catch (e: any) {
     res.status(500).json({ error: e.message });
   }
@@ -120,6 +125,7 @@ forjaRouter.get('/api/v2/forja/state', async (_req: Request, res: Response) => {
 
 // ── TRUST: role + permissions for user ───────────────────────────────────────
 forjaRouter.get('/api/v2/forja/trust/:userId', async (req: Request, res: Response) => {
+  const t0 = Date.now();
   const { userId } = req.params;
   // Role passed via header (X-Mari8x-Role) or inferred from userId prefix convention
   // e.g. "MASTER:IMO1234567" → role = MASTER
@@ -147,12 +153,14 @@ forjaRouter.get('/api/v2/forja/trust/:userId', async (req: Request, res: Respons
     trust_mask_schema: TRUST_MASK_SCHEMA,
     trust_mask_perms: describePerms(MARI8X_COMMUNITY_ROLE_MASK[role] ?? ROLE_MASK.GUEST),
     forja_version:    '2.0',
+    _meta: { duration_ms: Date.now() - t0, computed_at: new Date().toISOString(), trust_mask_applied: MARI8X_COMMUNITY_ROLE_MASK[role] ?? ROLE_MASK.GUEST },
   });
 });
 
 // ── SENSE: emit event ─────────────────────────────────────────────────────────
 forjaRouter.post('/api/v2/forja/sense/emit', async (req: Request, res: Response) => {
-  const { type, payload, voyage_id, port_code } = req.body as any;
+  const t0 = Date.now();
+  const { type, payload, voyage_id, port_code, before_state, after_state } = req.body as any;
   if (!type) return res.status(400).json({ error: 'type required' }) as any;
 
   if (!EMITS.includes(type)) {
@@ -162,13 +170,20 @@ forjaRouter.post('/api/v2/forja/sense/emit', async (req: Request, res: Response)
     }) as any;
   }
 
+  // @rule:CA-003 — before_state + after_state + delta required
+  if (!before_state || !after_state) {
+    return res.status(400).json({ error: 'before_state and after_state required (CA-003)', event_type: type }) as any;
+  }
+
   const event = {
-    service:  'mari8x-community',
+    service:      'mari8x-community',
     type,
-    voyage_id: voyage_id ?? null,
-    port_code: port_code ?? null,
-    payload:   payload ?? {},
-    fired_at:  new Date().toISOString(),
+    voyage_id:    voyage_id ?? null,
+    port_code:    port_code ?? null,
+    before_state,
+    after_state,
+    delta:        payload ?? {},
+    fired_at:     new Date().toISOString(),
   };
 
   // Fan-out to AnkrClaw webhook if configured — never fail the request on fan-out failure
@@ -187,7 +202,13 @@ forjaRouter.post('/api/v2/forja/sense/emit', async (req: Request, res: Response)
     console.log(`[forja:sense] ${type}`, JSON.stringify(event));
   }
 
-  res.json({ ok: true, event });
+  res.json({
+    ok: true,
+    event_type: type,
+    voyage_id: voyage_id ?? null,
+    emitted_at: new Date().toISOString(),
+    _meta: { duration_ms: Date.now() - t0, computed_at: new Date().toISOString(), trust_mask_applied: 1 },
+  });
 });
 
 // ── PROOF: rule→code compliance matrix ───────────────────────────────────────
@@ -200,6 +221,7 @@ forjaRouter.post('/api/v2/forja/sense/emit', async (req: Request, res: Response)
 // @rule:FRJ-P-005  PROOF endpoint MUST be publicly accessible without authentication
 // @rule:FRJ-P-006  Coverage calculated against certified rules only
 forjaRouter.get('/api/v2/forja/proof', async (req: Request, res: Response) => {
+  const t0 = Date.now();
   const { mode, status } = req.query as any;
   try {
     // ── 1. Load rules from mar_rules table ───────────────────────────────
@@ -305,6 +327,7 @@ forjaRouter.get('/api/v2/forja/proof', async (req: Request, res: Response) => {
       domain:             'maritime',
       forja_version:      '2.0',
       proof_generated_at: new Date().toISOString(),
+      _meta: { duration_ms: Date.now() - t0, computed_at: new Date().toISOString(), trust_mask_applied: 1 },
       proof_source:       annotations.length > 0 ? 'codex-crawl' : 'stub-pending-annotation-sweep',
       proof_crawled_at:   proofCacheAt,
       rules_total:        rulesTotal,
@@ -337,9 +360,11 @@ forjaRouter.get('/api/v2/forja/proof', async (req: Request, res: Response) => {
 // ── PROOF history — coverage trend (stub) ─────────────────────────────────────
 // @rule:FRJ-P-007  PROOF snapshots retained for 90 days minimum
 forjaRouter.get('/api/v2/forja/proof/history', async (_req: Request, res: Response) => {
+  const t0 = Date.now();
   res.json({
     service:   'mari8x-community',
     snapshots: [],
     note:      'Snapshot persistence — pending implementation.',
+    _meta: { duration_ms: Date.now() - t0, computed_at: new Date().toISOString(), trust_mask_applied: 1 },
   });
 });
